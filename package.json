@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "discord.js": "^11.5.0",
+    "dotenv": "^8.0.0"
+  },
+  "scripts": {
+    "start": "node bot.js"
+  }
+}
