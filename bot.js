@@ -2,7 +2,7 @@ require('dotenv').config();
 const discord = require('discord.js');
 const client = new discord.Client();
 
-const baseEvent = require('./events/baseevent');
+const baseEvent = require('./events/base');
 
 client.on('ready', message =>
 {
