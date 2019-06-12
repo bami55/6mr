@@ -1,3 +1,5 @@
+'use strict';
+
 const _recruit_emoji = process.env.RECRUIT_EMOJI;
 
 const discord = require('discord.js');

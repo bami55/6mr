@@ -1,3 +1,5 @@
+'use strict';
+
 const reaction = require('./reaction');
 
 const _events = {
