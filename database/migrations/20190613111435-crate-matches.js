@@ -1,7 +1,8 @@
 'use strict';
+
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('results', {
+    return queryInterface.createTable('matches', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -16,32 +17,8 @@ module.exports = {
         allowNull: false,
         type: Sequelize.INTEGER
       },
-      win: {
+      status: {
         type: Sequelize.INTEGER
-      },
-      lose: {
-        type: Sequelize.INTEGER
-      },
-      blue_player_1: {
-        type: Sequelize.STRING
-      },
-      blue_player_2: {
-        type: Sequelize.STRING
-      },
-      blue_player_3: {
-        type: Sequelize.STRING
-      },
-      orange_player_1: {
-        type: Sequelize.STRING
-      },
-      orange_player_2: {
-        type: Sequelize.STRING
-      },
-      orange_player_3: {
-        type: Sequelize.STRING
-      },
-      match_date: {
-        type: Sequelize.DATE
       },
       created_at: {
         allowNull: false,
@@ -53,7 +30,8 @@ module.exports = {
       }
     });
   },
+
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('results');
+    return queryInterface.dropTable('matches');
   }
 };
