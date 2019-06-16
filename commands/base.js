@@ -3,22 +3,23 @@
 require('dotenv').config();
 const rectuit = require('./recruit');
 const user = require('./user');
+const tier = require('./tier');
 
 exports.base = (client, message) => {
   
   const prefix = process.env.PREFIX;
-  if (!message.content.startsWith(prefix)) return;
+  if (!message.content.startsWith(prefix) || message.author.bot) return;
 
-	const input = message.content.slice(prefix.length).trim();
-	if (!input.length) return;
+	const args = message.content.slice(prefix.length).trim().split(/ +/);
+  const command = args.shift().toLowerCase();
   
-  const [, command, commandArgs] = input.match(/(\w+)\s*([\s\S]*)/);
-
-  if (command === 'b') {
-    rectuit.entry(client, message);
-  } else if (command === 'signup') {
-    user.create(client, message, commandArgs);
-  } else if (command === 'delete') {
-    user.delete(client, message);
+  switch (command) {
+    case 'b': rectuit.entry(client, message); break;
+    case 'signup': user.create(client, message, args); break;
+    case 'delete': user.delete(client, message); break;
+    case 'tier_add': tier.create(client, message, args); break;
+    case 'tier_delete': tier.delete(client, message, args); break;
+  
+    default: break;
   }
 }

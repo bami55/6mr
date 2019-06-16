@@ -4,6 +4,7 @@ module.exports = (sequelize, DataTypes) => {
     tier: DataTypes.INTEGER,
     tier_name: DataTypes.STRING,
     max_rate: DataTypes.INTEGER,
+    median_rate: DataTypes.INTEGER,
     min_rate: DataTypes.INTEGER
   }, {
     underscored: true,
