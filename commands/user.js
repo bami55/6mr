@@ -1,6 +1,7 @@
 'use strict';
 
 const db = require(__dirname + '/../database/models/index.js');
+const message_util = require(__dirname + '/../utils/message_util.js');
 
 // ユーザー登録
 exports.create = async (client, message) => {
@@ -25,18 +26,32 @@ exports.create = async (client, message) => {
 
 // ユーザー削除
 exports.delete = async (client, message) => {
-  const search = await db.users.findOne({ where: {discord_id: message.author.id}});
-  if (!search) {
-    message.reply('登録されていません');
+  if (!message.member.hasPermission('ADMINISTRATOR')) {
+    message.reply('管理者権限が必要です');
     return;
   }
 
-  search.destroy()
-  .then(() => {
-    message.reply('削除しました');
-  })
-  .catch(error => {
-    console.error(error);
-    message.reply('エラーが発生しました');
+  const mention_members = message.mentions.members;
+  if (!mention_members) {
+    message.reply('削除するユーザーのメンションをつけてください');
+    return;
+  }
+
+  mention_members.forEach(async member => {
+    const search = await db.users.findOne({ where: {discord_id: member.id}});
+    const user_name = member.displayName;
+    if (!search) {
+      message.reply(`${user_name} は登録されていません`);
+      return;
+    }
+  
+    search.destroy()
+    .then(() => {
+      message.reply(`${user_name} を削除しました`);
+    })
+    .catch(error => {
+      console.error(error);
+      message.reply(`${user_name} の削除中にエラーが発生しました`);
+    });
   });
 };
