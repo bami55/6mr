@@ -40,6 +40,15 @@ async function createOrUpdate(isCreate, message, args) {
     return;
   }
 
+  const search = await db.tiers.findOne({ where: {tier: args[0]}});
+  if (isCreate && search) {
+    message.reply(`${args[0]} はすでに登録されています`);
+    return;
+  } else if (!isCreate && !search) {
+    message.reply(`${args[0]} は登録されていません`);
+    return;
+  }
+
   const new_tier = {
     tier: args[0],
     tier_name: args[1],
@@ -48,14 +57,29 @@ async function createOrUpdate(isCreate, message, args) {
     min_rate: args[4],
   };
 
-  db.tiers.upsert(new_tier)
-  .then(() => {
-    message.reply('登録しました');
-  })
-  .catch(error => {
-    console.error(error);
-    message.reply('エラーが発生しました');
-  });
+  if (isCreate) {
+    db.tiers.create(new_tier)
+    .then(() => {
+      message.reply(`${new_tier.tier_name} を登録しました`);
+    })
+    .catch(error => {
+      console.error(error);
+      message.reply(`${new_tier.tier_name} の登録中にエラーが発生しました`);
+    });
+  } else {
+    db.tiers.update(new_tier, {
+      where: {
+        tier: new_tier.tier
+      }
+    })
+    .then(() => {
+      message.reply(`${new_tier.tier_name} を更新しました`);
+    })
+    .catch(error => {
+      console.error(error);
+      message.reply(`${new_tier.tier_name} の更新中にエラーが発生しました`);
+    });
+  }
 }
 
 // Tier削除コマンド
@@ -83,7 +107,7 @@ exports.delete = async (client, message, args) => {
 
   search.destroy()
   .then(() => {
-    message.reply(`Tier${search.tier_name} を削除しました`);
+    message.reply(`${search.tier_name} を削除しました`);
   })
   .catch(error => {
     console.error(error);
