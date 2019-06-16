@@ -18,6 +18,7 @@ exports.base = (client, message) => {
     case 'signup': user.create(client, message, args); break;
     case 'delete': user.delete(client, message); break;
     case 'tier_add': tier.create(client, message, args); break;
+    case 'tier_update': tier.update(client, message, args); break;
     case 'tier_delete': tier.delete(client, message, args); break;
   
     default: break;
