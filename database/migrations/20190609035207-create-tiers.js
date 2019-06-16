@@ -2,24 +2,27 @@
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface.createTable('tiers', {
-      id: {
+      tier: {
         allowNull: false,
-        autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      tier: {
-        allowNull: false,
-        type: Sequelize.INTEGER
-      },
       tier_name: {
+        allowNull: false,
         type: Sequelize.STRING
       },
       max_rate: {
+        allowNull: false,
+        default: 0,
+        type: Sequelize.INTEGER
+      },
+      median_rate: {
+        allowNull: false,
         default: 0,
         type: Sequelize.INTEGER
       },
       min_rate: {
+        allowNull: false,
         default: 0,
         type: Sequelize.INTEGER
       },

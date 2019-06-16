@@ -3,14 +3,10 @@
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface.createTable('matches', {
-      id: {
+      match_id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
-      },
-      match_id: {
-        allowNull: false,
         type: Sequelize.INTEGER
       },
       match_tier: {
@@ -18,6 +14,7 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       status: {
+        allowNull: false,
         type: Sequelize.INTEGER
       },
       created_at: {

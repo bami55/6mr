@@ -2,17 +2,15 @@
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface.createTable('match_users', {
-      id: {
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true,
-        type: Sequelize.INTEGER
-      },
       match_id: {
-        type: Sequelize.INTEGER
+        allowNull: false,
+        type: Sequelize.INTEGER,
+        primaryKey: true
       },
       discord_id: {
-        type: Sequelize.STRING
+        allowNull: false,
+        type: Sequelize.STRING,
+        primaryKey: true
       },
       team: {
         type: Sequelize.INTEGER
