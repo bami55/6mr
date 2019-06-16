@@ -14,7 +14,7 @@ exports.base = (client, message) => {
   const command = args.shift().toLowerCase();
   
   switch (command) {
-    case 'b': rectuit.entry(client, message); break;
+    case 'open': rectuit.entry(client, message); break;
     case 'signup': user.create(client, message, args); break;
     case 'delete': user.delete(client, message); break;
     case 'tier_add': tier.create(client, message, args); break;
