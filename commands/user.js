@@ -1,7 +1,6 @@
 'use strict';
 
 const db = require(__dirname + '/../database/models/index.js');
-const message_util = require(__dirname + '/../utils/message_util.js');
 
 // ユーザー登録
 exports.create = async (client, message, commandArgs) => {
