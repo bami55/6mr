@@ -10,7 +10,7 @@ exports.create = async (client, message, commandArgs) => {
     return;
   }
 
-  if (!commandArgs) {
+  if (!commandArgs || commandArgs.length === 0) {
     message.reply('Tierを指定してください');
     return;
   }
