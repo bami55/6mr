@@ -4,16 +4,27 @@ const db = require(__dirname + '/../database/models/index.js');
 const message_util = require(__dirname + '/../utils/message_util.js');
 
 // ユーザー登録
-exports.create = async (client, message) => {
+exports.create = async (client, message, commandArgs) => {
   const search = await db.users.findOne({ where: {discord_id: message.author.id}});
   if (search) {
     message.reply('すでに登録済みです');
     return;
   }
 
+  if (!commandArgs) {
+    message.reply('Tierを指定してください');
+    return;
+  }
+
+  const tier = await db.tiers.findOne({ where: {tier: commandArgs[0]}});
+  if (!tier) {
+    message.reply('正しいTierを指定してください');
+    return;
+  }
+
   db.users.create({
     discord_id: message.author.id,
-    tier: 4
+    tier: tier.tier
   })
   .then(() => {
     message.reply('登録しました');

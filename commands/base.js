@@ -17,7 +17,7 @@ exports.base = (client, message) => {
   if (command === 'b') {
     rectuit.entry(client, message);
   } else if (command === 'signup') {
-    user.create(client, message);
+    user.create(client, message, commandArgs);
   } else if (command === 'delete') {
     user.delete(client, message);
   }
