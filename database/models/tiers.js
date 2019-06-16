@@ -12,5 +12,6 @@ module.exports = (sequelize, DataTypes) => {
   tiers.associate = function(models) {
     // associations can be defined here
   };
+  tiers.removeAttribute('id');
   return tiers;
 };

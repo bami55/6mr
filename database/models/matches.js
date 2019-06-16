@@ -10,5 +10,6 @@ module.exports = (sequelize, DataTypes) => {
   matches.associate = function(models) {
     // associations can be defined here
   };
+  matches.removeAttribute('id');
   return matches;
 };
