@@ -102,6 +102,29 @@ async function changeMatchStatus(match_id, entry_users_id) {
       discord_id: userId,
       team: 0
     });
+  }); 
+}
+
+async function setMatchRole(guild, match_id, entry_users_id) {
+  // TODO 役職（Role）もID管理したほうがよいかもしれない→Tiersテーブルにフィールド追加
+
+  const categoryChannel = await guild.createChannel(match_id, {
+    type: 'category',
+    permissionOverwrites: [{
+      id: guild.id,
+      deny: ['MANAGE_MESSAGES'],
+      allow: ['SEND_MESSAGES']
+    }]
   });
-  
+
+  await createChannelInCategory(categoryChannel, `[${match_id}]WaitingRoom`);
+  await createChannelInCategory(categoryChannel, `[${match_id}]Blue`);
+  await createChannelInCategory(categoryChannel, `[${match_id}]Orange`);
+}
+
+async function createChannelInCategory(categoryChannel, channelName) {
+  const textChannel = await guild.createChannel(channelName, { type: 'text' });
+  const voiceChannel = await guild.createChannel(channelName, { type: 'voice' });
+  await textChannel.setParent(categoryChannel);
+  await voiceChannel.setParent(categoryChannel);
 }
