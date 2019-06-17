@@ -5,7 +5,6 @@ module.exports = {
     return queryInterface.createTable('matches', {
       match_id: {
         allowNull: false,
-        autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
