@@ -1,7 +1,6 @@
 'use strict';
 
 require('dotenv').config();
-const rectuit = require('./recruit');
 const user = require('./user');
 const tier = require('./tier');
 const match = require('./match');
@@ -15,12 +14,17 @@ exports.base = (client, message) => {
   const command = args.shift().toLowerCase();
   
   switch (command) {
-    case 'open': rectuit.entry(client, message); break;
+    // User
     case 'signup': user.create(client, message, args); break;
     case 'delete': user.delete(client, message); break;
+
+    // Tier
     case 'tier_add': tier.create(client, message, args); break;
     case 'tier_update': tier.update(client, message, args); break;
     case 'tier_delete': tier.delete(client, message, args); break;
+
+    // Match
+    case 'open': match.open(client, message); break;
     case 'win': match.report_win(client, message, args); break;
     case 'lose': match.report_lose(client, message, args); break;
   
