@@ -38,7 +38,19 @@ exports.open = async (client, message) => {
       .addField(process.env.RECRUIT_FIELD_STATUS, process.env.RECRUIT_START, true)
       .addField(process.env.RECRUIT_FIELD_ENTRY, process.env.ENTRY_NONE);
     message.channel.send(embed)
-    .then(message => {
+    .then(async message => {
+      await db.match_discord_info.create({
+        match_id: m.match_id,
+        message_id: message.id,
+        role_id: null,
+        category_id: null,
+        waiting_text_ch_id: null,
+        waiting_voice_ch_id: null,
+        team0_text_ch_id: null,
+        team0_voice_ch_id: null,
+        team1_text_ch_id: null,
+        team1_voice_ch_id: null
+      });
       message.react(process.env.RECRUIT_EMOJI);
     });
   })
