@@ -71,7 +71,7 @@ exports.recruit = async (client, event) => {
     await changeMatchStatus(match, entry_users_id);
 
     // 部屋作成
-    await setMatchRole(guild, match, entry_users_id);
+    await createMatchChannel(guild, match, entry_users_id);
 
     // 役職設定
     console.log(match_id);
@@ -86,7 +86,7 @@ exports.recruit = async (client, event) => {
  */
 async function changeMatchStatus(match, entry_users_id) {
   
-  // ステータス変更
+  // ステータス更新
   let upd_match = {
     match_id: match.match_id,
     match_tier: match.tier,
@@ -108,9 +108,17 @@ async function changeMatchStatus(match, entry_users_id) {
   }); 
 }
 
-async function setMatchRole(guild, match, entry_users_id) {
+/**
+ * 試合用のチャンネルを作成する
+ * @param {*} guild 
+ * @param {*} match 
+ * @param {*} entry_users_id 
+ */
+async function createMatchChannel(guild, match, entry_users_id) {
   const match_id = match.match_id;
   const tier = await db.tiers.findOne({ where: { tier: match.match_tier } });
+  
+  // カテゴリチャンネル作成
   const categoryChannel = await guild.createChannel(`${tier.tier_name}【${match_id}】`, {
     type: 'category',
     permissionOverwrites: [{
@@ -119,6 +127,7 @@ async function setMatchRole(guild, match, entry_users_id) {
     }]
   });
 
+  // エントリーがあったプレイヤーの権限を設定する
   for (let i = 0; i < entry_users_id.length; i++) {
     const member = guild.members.find(m => m.id === entry_users_id[i]);
     await categoryChannel.overwritePermissions(member, {
@@ -126,6 +135,7 @@ async function setMatchRole(guild, match, entry_users_id) {
     });
   }
   
+  // 試合用チャンネル情報を更新する
   let match_discord_info = await db.match_discord_info.findOne({ where: { match_id: match_id } });
   let upd_discord_info = {
     match_id: match_discord_info.match_id,
@@ -139,6 +149,7 @@ async function setMatchRole(guild, match, entry_users_id) {
     team1_voice_ch_id: null
   };
   
+  // 試合用チャンネルをカテゴリ内に作成
   let vc = null;
   vc = await createChannelInCategory(categoryChannel, `【${match_id}】WaitingRoom`);
   upd_discord_info.waiting_voice_ch_id = vc.id;
@@ -149,6 +160,7 @@ async function setMatchRole(guild, match, entry_users_id) {
   vc = await createChannelInCategory(categoryChannel, `【${match_id}】Orange`);
   upd_discord_info.team1_voice_ch_id = vc.id;
   
+  // DBに試合用チャンネル情報を登録
   await db.match_discord_info.update(upd_discord_info, {
     where: {
       match_id: match_id
@@ -156,6 +168,11 @@ async function setMatchRole(guild, match, entry_users_id) {
   });
 }
 
+/**
+ * カテゴリにボイスチャンネルを作成する
+ * @param {*} categoryChannel 
+ * @param {*} channelName 
+ */
 async function createChannelInCategory(categoryChannel, channelName) {
   const voiceChannel = await categoryChannel.guild.createChannel(channelName, { type: 'voice' });
   await voiceChannel.setParent(categoryChannel);

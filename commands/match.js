@@ -124,11 +124,15 @@ async function report (isWin, message, args) {
     await category.delete();
   }
 
-  // 役職削除
-
   message.reply('結果登録を完了しました');
 }
 
+/**
+ * 結果をDBに保存
+ * @param {*} isWin 
+ * @param {*} findMatch 
+ * @param {*} findMatchUser 
+ */
 async function saveResult(isWin, findMatch, findMatchUser) {
   // 試合ステータス変更
   let upd_match = {
