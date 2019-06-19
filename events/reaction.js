@@ -127,4 +127,6 @@ async function createChannelInCategory(categoryChannel, channelName) {
   const voiceChannel = await categoryChannel.guild.createChannel(channelName, { type: 'voice' });
   await textChannel.setParent(categoryChannel);
   await voiceChannel.setParent(categoryChannel);
+  await textChannel.lockPermissions();
+  await voiceChannel.lockPermissions();
 }
