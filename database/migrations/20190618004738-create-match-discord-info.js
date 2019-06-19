@@ -10,9 +10,6 @@ module.exports = {
       message_id: {
         type: Sequelize.STRING
       },
-      role_id: {
-        type: Sequelize.STRING
-      },
       category_id: {
         type: Sequelize.STRING
       },

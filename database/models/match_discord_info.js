@@ -3,7 +3,6 @@ module.exports = (sequelize, DataTypes) => {
   const match_discord_info = sequelize.define('match_discord_info', {
     match_id: DataTypes.INTEGER,
     message_id: DataTypes.STRING,
-    role_id: DataTypes.STRING,
     category_id: DataTypes.STRING,
     waiting_text_ch_id: DataTypes.STRING,
     waiting_voice_ch_id: DataTypes.STRING,
