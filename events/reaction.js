@@ -31,18 +31,35 @@ exports.recruit = async (client, event) => {
     return;
   }
 
+  const match_disco_info = await db.match_discord_info.findOne({ where: { message_id: message.id } });
+  const match = await db.matches.findOne({ where: { match_id: match_disco_info.match_id } });
+  const match_tier = match.tier_id;
+  const user_info = db.users.findOne({ where: { discord_id: user.id } });
+  if (!user_info) {
+    channel.send(`<@${user.id}> 先にユーザー登録してください`);
+    return;
+  }
+  if (user_info.tier !== match_tier) {
+    channel.send(`<@${user.id}> Tierが違います`);
+    return;
+  }
+
   // リアクションユーザー全取得
-  let entry_users_id = [];
-  let entry_users_name = [];
-  let entry_users_mention = [];
+  let entry_users = {
+    user: [],
+    id: [],
+    name: [],
+    mention: []
+  };
   const reaction = message.reactions.find(r => r.emoji.name === data.emoji.name);
   if (reaction) {
     const reaction_users = await reaction.fetchUsers();
     reaction_users.forEach(user => {
       if (!user.bot) {
-        entry_users_id.push(user.id);
-        entry_users_name.push(guild.member(user).displayName);
-        entry_users_mention.push(`<@${user.id}>`);
+        entry_users.user.push(user);
+        entry_users.id.push(user.id);
+        entry_users.name.push(guild.member(user).displayName);
+        entry_users.mention.push(`<@${user.id}>`);
       }
     });
   }
@@ -50,28 +67,26 @@ exports.recruit = async (client, event) => {
   // エントリーユーザーの表示
   const new_embed = new discord.RichEmbed(embed);
   let field_entry = new_embed.fields.find(e => e.name === match_config.embed.entry);
-  if (entry_users_name.length === 0) {
+  if (entry_users.name.length === 0) {
     field_entry.value = match_config.entry_none;
   } else {
-    field_entry.value = entry_users_name.join("\n");
+    field_entry.value = entry_users.name.join("\n");
   }
 
   // エントリー数が募集人数に達した場合
   const entry_size = match_config.entry_size;
-  if (entry_size <= entry_users_name.length) {
+  if (entry_size <= entry_users.name.length) {
     let new_field_status = new_embed.fields.find(e => e.name === match_config.embed.status);
     new_field_status.value = match_config.embed_status.closed;
 
     // メンションでエントリーユーザーに通知
-    channel.send(`${entry_users_mention.join(' ')}\n${match_config.notification}`);
+    channel.send(`${entry_users.mention.join(' ')}\n${match_config.notification}`);
 
     // 試合ステータス変更
-    const match_id = embed.fields.find(e => e.name === match_config.embed.id).value;
-    const match = await db.matches.findOne({ where: { match_id: match_id } });
-    await changeMatchStatus(match, entry_users_id);
+    await changeMatchStatus(match, entry_users.id);
 
     // 部屋作成
-    await createMatchChannel(guild, match, entry_users_id);
+    await createMatchChannel(guild, match, entry_users.id);
 
     // 役職設定
     console.log(match_id);
