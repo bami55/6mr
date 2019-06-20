@@ -26,6 +26,7 @@ exports.recruit = async (client, event) => {
   
   const channel = client.channels.get(data.channel_id) || await user.createDM();
   const message = await channel.fetchMessage(data.message_id);
+  console.log(message.embeds);
   const embed = message.embeds.shift();
   if (!embed) return;
   
@@ -37,6 +38,7 @@ exports.recruit = async (client, event) => {
   }
 
   // エントリーチェック
+  console.log('エントリーチェック');
   const isEnabled = await entryEnabled(channel, user, match_tier);
   if (!isEnabled) return;
 
@@ -61,9 +63,9 @@ exports.recruit = async (client, event) => {
   }
 
   // リアクションユーザーのDB登録
-  updateMatchUsers(entry_users);
+  updateMatchUsers(match.match_id, entry_users.id);
 
-  // エントリーユーザーの表示
+  // Embed Field
   const new_embed = new discord.RichEmbed(embed);
   let field_entry = new_embed.fields.find(e => e.name === match_config.embed.entry);
   if (entry_users.name.length === 0) {
@@ -72,7 +74,7 @@ exports.recruit = async (client, event) => {
     field_entry.value = entry_users.name.join("\n");
   }
 
-  // エントリー数が募集人数に達した場合
+  // 募集人数に達した場合
   const entry_size = match_config.entry_size;
   if (entry_size <= entry_users.name.length) {
     let new_field_status = new_embed.fields.find(e => e.name === match_config.embed.status);
@@ -86,8 +88,6 @@ exports.recruit = async (client, event) => {
 
     // 部屋作成
     await createMatchChannel(guild, match, entry_users.id);
-
-    // 役職設定
   }
   message.edit(new_embed);
 };
@@ -111,7 +111,7 @@ async function entryEnabled(channel, user, match_tier) {
     return false;
   }
 
-  const match_users = db.match_users.findAll({
+  const match_users = await db.match_users.findAll({
     where: {
       discord_id: user.id
     },
@@ -124,6 +124,7 @@ async function entryEnabled(channel, user, match_tier) {
       }
     ]
   });
+  console.log(match_users);
   if (match_users.length > 0) {
     await channel.send(`<@${user.id}> 他の試合でエントリー中です`);
     return false;
@@ -131,21 +132,39 @@ async function entryEnabled(channel, user, match_tier) {
   return true;
 }
 
-async function updateMatchUsers(matchId, entryUsers) {
+/**
+ * 試合ユーザー
+ * @param {*} matchId 
+ * @param {*} entryUserIds 
+ */
+async function updateMatchUsers(matchId, entryUserIds) {
+  // リアクションが外れているユーザーを削除
   const m_users = await db.match_users.findAll({ where: { match_id: matchId } });
-  const deleteArray = m_users.filter(mu => !entryUsers.id.includes(mu.discord_id));
+  const deleteArray = m_users.filter(mu => !entryUserIds.includes(mu.discord_id));
   if (deleteArray) {
     for (let i = 0; i < deleteArray.length; i++) {
-      await db.match_users.destroy({ where: { discord_id: deleteArray[i] } });
+      await db.match_users.destroy({
+        where: {
+          match_id: matchId,
+          discord_id: deleteArray[i]
+        }
+      });
     }
   }
 
-  for (let i = 0; i < entryUsers.id.length; i++) {
-    const mu = db.match_users.find({ where: { discord_id: entryUsers.id[i] } });
+  // リアクションがついたユーザーを登録
+  for (let i = 0; i < entryUserIds.length; i++) {
+    const mu = await db.match_users.findOne(
+      {
+        where: {
+          match_id: matchId,
+          discord_id: entryUserIds[i]
+        }
+      });
     if (!mu) {
-      await db.match_users.insert({
+      await db.match_users.create({
         match_id: matchId,
-        discord_id: entryUsers.id[i],
+        discord_id: entryUserIds[i],
         team: 0
       });
     }
@@ -170,15 +189,6 @@ async function changeMatchStatus(match, entry_users_id) {
       match_id: match.match_id
     }
   });
-
-  // match_users 登録
-  // await entry_users_id.forEach(async userId => {
-  //   await db.match_users.upsert({
-  //     match_id: match.match_id,
-  //     discord_id: userId,
-  //     team: 0
-  //   });
-  // }); 
 }
 
 /**
