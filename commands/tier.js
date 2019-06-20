@@ -49,36 +49,70 @@ async function createOrUpdate(isCreate, message, args) {
     return;
   }
 
+  // 役職設定
+  setRole(isCreate, message, args, search);
+}
+
+/**
+ * 役職設定
+ * @param {*} isCreate 
+ * @param {*} message 
+ * @param {*} args 
+ * @param {*} search 
+ */
+function setRole(isCreate, message, args, search) {
+  
+  const tier_name = args[1];
   const new_tier = {
     tier: args[0],
-    tier_name: args[1],
+    role_id: null,
     max_rate: args[2],
     median_rate: args[3],
     min_rate: args[4],
   };
 
   if (isCreate) {
-    db.tiers.create(new_tier)
-    .then(() => {
-      message.reply(`${new_tier.tier_name} を登録しました`);
+    message.guild.createRole({
+      name: tier_name
     })
-    .catch(error => {
-      console.error(error);
-      message.reply(`${new_tier.tier_name} の登録中にエラーが発生しました`);
-    });
+      .then(role => {
+        message.reply(`${tier_name} の役職を作成しました`);
+        new_tier.role_id = role.id;
+        db.tiers.create(new_tier)
+          .then(() => {
+            message.reply(`${tier_name} を登録しました`);
+          })
+          .catch(error => {
+            console.error(error);
+            message.reply(`${tier_name} の登録中にエラーが発生しました`);
+          });
+      })
+      .catch(error => {
+        console.error(error);
+        message.reply(`${tier_name} の役職作成中にエラーが発生しました`);
+      });
   } else {
-    db.tiers.update(new_tier, {
-      where: {
-        tier: new_tier.tier
-      }
-    })
-    .then(() => {
-      message.reply(`${new_tier.tier_name} を更新しました`);
-    })
-    .catch(error => {
-      console.error(error);
-      message.reply(`${new_tier.tier_name} の更新中にエラーが発生しました`);
-    });
+    const role = message.guild.roles.find(r => r.id === search.role_id);
+    role.setName(tier_name)
+      .then(() => {
+        new_tier.role_id = role.id;
+        db.tiers.update(new_tier, {
+          where: {
+            tier: new_tier.tier
+          }
+        })
+          .then(() => {
+            message.reply(`${tier_name} を更新しました`);
+          })
+          .catch(error => {
+            console.error(error);
+            message.reply(`${tier_name} の更新中にエラーが発生しました`);
+          });
+      })
+      .catch(error => {
+        console.error(error);
+        message.reply(`${tier_name} の役職名設定中にエラーが発生しました`);
+      });
   }
 }
 

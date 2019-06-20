@@ -7,7 +7,7 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      tier_name: {
+      role_id: {
         allowNull: false,
         type: Sequelize.STRING
       },
