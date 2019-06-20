@@ -21,6 +21,16 @@ exports.recruit = async (client, event) => {
   const channel = client.channels.get(data.channel_id) || await user.createDM();
   const message = await channel.fetchMessage(data.message_id);
 
+  const embed = message.embeds.shift();
+  if (!embed) return;
+  
+  // すでに募集が終了していたら中断
+  const field_status = embed.fields.find(e => e.name === match_config.embed.status);
+  if (embed.title !== match_config.embed.title || 
+      field_status.value === match_config.embed_status.closed) {
+    return;
+  }
+
   // リアクションユーザー全取得
   let entry_users_id = [];
   let entry_users_name = [];
@@ -35,16 +45,6 @@ exports.recruit = async (client, event) => {
         entry_users_mention.push(`<@${user.id}>`);
       }
     });
-  }
-
-  const embed = message.embeds.shift();
-  if (!embed) return;
-  
-  // すでに募集が終了していたら中断
-  const field_status = embed.fields.find(e => e.name === match_config.embed.status);
-  if (embed.title !== match_config.embed.title || 
-      field_status.value === match_config.embed_status.closed) {
-    return;
   }
 
   // エントリーユーザーの表示
@@ -119,7 +119,8 @@ async function createMatchChannel(guild, match, entry_users_id) {
   const tier = await db.tiers.findOne({ where: { tier: match.match_tier } });
   
   // カテゴリチャンネル作成
-  const categoryChannel = await guild.createChannel(`${tier.tier_name}【${match_id}】`, {
+  const role = guild.roles.get(tier.tier);
+  const categoryChannel = await guild.createChannel(`${role.name}【${match_id}】`, {
     type: 'category',
     permissionOverwrites: [{
       id: guild.id,
@@ -129,7 +130,7 @@ async function createMatchChannel(guild, match, entry_users_id) {
 
   // エントリーがあったプレイヤーの権限を設定する
   for (let i = 0; i < entry_users_id.length; i++) {
-    const member = guild.members.find(m => m.id === entry_users_id[i]);
+    const member = guild.members.get(entry_users_id[i]);
     await categoryChannel.overwritePermissions(member, {
       VIEW_CHANNEL: true
     });

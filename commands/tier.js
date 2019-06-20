@@ -92,7 +92,7 @@ function setRole(isCreate, message, args, search) {
         message.reply(`${tier_name} の役職作成中にエラーが発生しました`);
       });
   } else {
-    const role = message.guild.roles.find(r => r.id === search.role_id);
+    const role = message.guild.roles.get(search.role_id);
     role.setName(tier_name)
       .then(() => {
         new_tier.role_id = role.id;
@@ -139,12 +139,21 @@ exports.delete = async (client, message, args) => {
     return;
   }
 
+  const role = message.guild.roles.get(search.role_id);
+  const tier_name = role.name;
   search.destroy()
-  .then(() => {
-    message.reply(`${search.tier_name} を削除しました`);
-  })
-  .catch(error => {
-    console.error(error);
-    message.reply(`${search.tier_name} の削除中にエラーが発生しました`);
-  });
+    .then(() => {
+      message.reply(`${tier_name} を削除しました`);
+      role.delete()
+        .then(() => {
+          message.reply(`${tier_name} の役職を削除しました`);
+        })
+        .catch(error => {
+          message.reply(`${tier_name} の役職削除中にエラーが発生しました`);
+        })
+    })
+    .catch(error => {
+      console.error(error);
+      message.reply(`${tier_name} の削除中にエラーが発生しました`);
+    });
 };

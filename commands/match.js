@@ -29,35 +29,36 @@ exports.open = async (client, message) => {
     match_tier: tier.tier,
     status: match_config.status.open
   })
-  .then(match => {
-    const embed = new discord.RichEmbed()
-      .setColor('#0099ff')
-      .setTitle(match_config.embed.title)
-      .addField(match_config.embed.id, match.match_id, true)
-      .addField(match_config.embed.tier, tier.tier_name, true)
-      .addField(match_config.embed.remaining, match_config.entry_size, true)
-      .addField(match_config.embed.status, match_config.embed_status.open, true)
-      .addField(match_config.embed.entry, match_config.entry_none);
-    message.channel.send(embed)
-    .then(async message => {
-      await db.match_discord_info.create({
-        match_id: match.match_id,
-        message_id: message.id,
-        category_id: null,
-        waiting_text_ch_id: null,
-        waiting_voice_ch_id: null,
-        team0_text_ch_id: null,
-        team0_voice_ch_id: null,
-        team1_text_ch_id: null,
-        team1_voice_ch_id: null
-      });
-      message.react(match_config.reaction_emoji);
+    .then(match => {
+      const role = message.guild.roles.get(tier.role_id);
+      const embed = new discord.RichEmbed()
+        .setColor('#0099ff')
+        .setTitle(match_config.embed.title)
+        .addField(match_config.embed.id, match.match_id, true)
+        .addField(match_config.embed.tier, role.name, true)
+        .addField(match_config.embed.remaining, match_config.entry_size, true)
+        .addField(match_config.embed.status, match_config.embed_status.open, true)
+        .addField(match_config.embed.entry, match_config.entry_none);
+      message.channel.send(embed)
+        .then(async message => {
+          await db.match_discord_info.create({
+            match_id: match.match_id,
+            message_id: message.id,
+            category_id: null,
+            waiting_text_ch_id: null,
+            waiting_voice_ch_id: null,
+            team0_text_ch_id: null,
+            team0_voice_ch_id: null,
+            team1_text_ch_id: null,
+            team1_voice_ch_id: null
+          });
+          message.react(match_config.reaction_emoji);
+        });
+    })
+    .catch(error => {
+      console.error(error);
+      message.reply('試合の登録中にエラーが発生しました');
     });
-  })
-  .catch(error => {
-    console.error(error);
-    message.reply('試合の登録中にエラーが発生しました');
-  });
 }
 
 /**
