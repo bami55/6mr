@@ -9,9 +9,15 @@ const discord = require('discord.js');
 
 exports.recruit = async (client, event) => {
   const { t: type, d: data } = event;
-  const user = client.users.get(data.user_id);
+
+  const match_disco_info = await db.match_discord_info.findOne({ where: { message_id: data.message_id } });
+  if (!match_disco_info) return;
+
+  const match = await db.matches.findOne({ where: { match_id: match_disco_info.match_id } });
+  const match_tier = match.tier_id;
 
   // bot or 指定絵文字以外は中断
+  const user = client.users.get(data.user_id);
   if (data.emoji.name !== _recruit_emoji) return;
   if (user.bot) return;
 
@@ -20,7 +26,6 @@ exports.recruit = async (client, event) => {
   
   const channel = client.channels.get(data.channel_id) || await user.createDM();
   const message = await channel.fetchMessage(data.message_id);
-
   const embed = message.embeds.shift();
   if (!embed) return;
   
@@ -31,18 +36,9 @@ exports.recruit = async (client, event) => {
     return;
   }
 
-  const match_disco_info = await db.match_discord_info.findOne({ where: { message_id: message.id } });
-  const match = await db.matches.findOne({ where: { match_id: match_disco_info.match_id } });
-  const match_tier = match.tier_id;
-  const user_info = db.users.findOne({ where: { discord_id: user.id } });
-  if (!user_info) {
-    channel.send(`<@${user.id}> 先にユーザー登録してください`);
-    return;
-  }
-  if (user_info.tier !== match_tier) {
-    channel.send(`<@${user.id}> Tierが違います`);
-    return;
-  }
+  // エントリーチェック
+  const isEnabled = await entryEnabled(channel, user, match_tier);
+  if (!isEnabled) return;
 
   // リアクションユーザー全取得
   let entry_users = {
@@ -63,6 +59,9 @@ exports.recruit = async (client, event) => {
       }
     });
   }
+
+  // リアクションユーザーのDB登録
+  updateMatchUsers(entry_users);
 
   // エントリーユーザーの表示
   const new_embed = new discord.RichEmbed(embed);
@@ -89,10 +88,69 @@ exports.recruit = async (client, event) => {
     await createMatchChannel(guild, match, entry_users.id);
 
     // 役職設定
-    console.log(match_id);
   }
   message.edit(new_embed);
 };
+
+/**
+ * ユーザーがエントリー可能か？
+ * @param {*} channel 
+ * @param {*} user 
+ * @param {*} match_tier 
+ */
+async function entryEnabled(channel, user, match_tier) {
+
+  const user_info = db.users.findOne({ where: { discord_id: user.id } });
+  if (!user_info) {
+    await channel.send(`<@${user.id}> 先にユーザー登録してください`);
+    return false;
+  }
+
+  if (user_info.tier !== match_tier) {
+    await channel.send(`<@${user.id}> Tierが違います`);
+    return false;
+  }
+
+  const match_users = db.match_users.findAll({
+    where: {
+      discord_id: user.id
+    },
+    raw: true,
+    include: [
+      {
+        model: db.matches,
+        required: true,
+        where: { status: match_config.status.open }
+      }
+    ]
+  });
+  if (match_users.length > 0) {
+    await channel.send(`<@${user.id}> 他の試合でエントリー中です`);
+    return false;
+  }
+  return true;
+}
+
+async function updateMatchUsers(matchId, entryUsers) {
+  const m_users = await db.match_users.findAll({ where: { match_id: matchId } });
+  const deleteArray = m_users.filter(mu => !entryUsers.id.includes(mu.discord_id));
+  if (deleteArray) {
+    for (let i = 0; i < deleteArray.length; i++) {
+      await db.match_users.destroy({ where: { discord_id: deleteArray[i] } });
+    }
+  }
+
+  for (let i = 0; i < entryUsers.id.length; i++) {
+    const mu = db.match_users.find({ where: { discord_id: entryUsers.id[i] } });
+    if (!mu) {
+      await db.match_users.insert({
+        match_id: matchId,
+        discord_id: entryUsers.id[i],
+        team: 0
+      });
+    }
+  }
+}
 
 /**
  * 試合ステータス変更
@@ -114,13 +172,13 @@ async function changeMatchStatus(match, entry_users_id) {
   });
 
   // match_users 登録
-  entry_users_id.forEach(async userId => {
-    await db.match_users.upsert({
-      match_id: match.match_id,
-      discord_id: userId,
-      team: 0
-    });
-  }); 
+  // await entry_users_id.forEach(async userId => {
+  //   await db.match_users.upsert({
+  //     match_id: match.match_id,
+  //     discord_id: userId,
+  //     team: 0
+  //   });
+  // }); 
 }
 
 /**
@@ -134,7 +192,7 @@ async function createMatchChannel(guild, match, entry_users_id) {
   const tier = await db.tiers.findOne({ where: { tier: match.match_tier } });
   
   // カテゴリチャンネル作成
-  const role = guild.roles.get(tier.tier);
+  const role = guild.roles.get(tier.role_id);
   const categoryChannel = await guild.createChannel(`${role.name}【${match_id}】`, {
     type: 'category',
     permissionOverwrites: [{
