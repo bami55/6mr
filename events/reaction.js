@@ -41,7 +41,6 @@ exports.recruit = async (client, event) => {
 
   // リアクションユーザー全取得
   let entry_users = await getReactionUsers(guild, reaction);
-  console.log(entry_users.id);
 
   // リアクションユーザーのDB登録
   updateMatchUsers(match.match_id, entry_users.id);
@@ -118,8 +117,6 @@ async function entryEnabled(channel, user, match_id, match_tier) {
     return false;
   }
 
-  console.log(user_info.tier);
-  console.log(match_tier);
   if (user_info.tier !== match_tier) {
     await channel.send(`<@${user.id}> Tierが違います`);
     return false;
@@ -187,7 +184,6 @@ async function updateMatchUsers(matchId, entryUserIds) {
   const deleteArray = m_users.filter(mu => !entryUserIds.includes(mu.discord_id));
   if (deleteArray) {
     for (let i = 0; i < deleteArray.length; i++) {
-      console.log(deleteArray[i]);
       await db.match_users.destroy({
         where: {
           match_id: matchId,
