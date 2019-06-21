@@ -4,6 +4,7 @@ require('dotenv').config();
 const match_config = require(__dirname + '/../config/match.json');
 const db = require(__dirname + '/../database/models/index.js');
 const _recruit_emoji = match_config.reaction_emoji;
+const _event_type_add = 'MESSAGE_REACTION_ADD';
 
 const discord = require('discord.js');
 
@@ -13,9 +14,6 @@ exports.recruit = async (client, event) => {
   const match_disco_info = await db.match_discord_info.findOne({ where: { message_id: data.message_id } });
   if (!match_disco_info) return;
 
-  const match = await db.matches.findOne({ where: { match_id: match_disco_info.match_id } });
-  const match_tier = match.tier_id;
-
   // bot or 指定絵文字以外は中断
   const user = client.users.get(data.user_id);
   if (data.emoji.name !== _recruit_emoji) return;
@@ -23,50 +21,37 @@ exports.recruit = async (client, event) => {
 
   const guild = client.guilds.get(data.guild_id);
   if (!guild) return;
+
+   // すでに募集が終了していたら中断
+  if (await isRecruitClosed(data.message_id)) return;
   
-  const channel = client.channels.get(data.channel_id) || await user.createDM();
+  const channel = await client.channels.get(data.channel_id);
   const message = await channel.fetchMessage(data.message_id);
-  console.log(message.embeds);
-  const embed = message.embeds.shift();
-  if (!embed) return;
-  
-  // すでに募集が終了していたら中断
-  const field_status = embed.fields.find(e => e.name === match_config.embed.status);
-  if (embed.title !== match_config.embed.title || 
-      field_status.value === match_config.embed_status.closed) {
-    return;
-  }
+  const match = await db.matches.findOne({ where: { match_id: match_disco_info.match_id } });
 
   // エントリーチェック
-  console.log('エントリーチェック');
-  const isEnabled = await entryEnabled(channel, user, match_tier);
-  if (!isEnabled) return;
+  const reaction = message.reactions.find(r => r.emoji.name === data.emoji.name);
+  if (type === _event_type_add) {
+    const isEnabled = await entryEnabled(channel, user, match, match.match_tier);
+    if (!isEnabled) {
+      if (reaction) await reaction.remove(user);
+      return;
+    }
+  }
 
   // リアクションユーザー全取得
-  let entry_users = {
-    user: [],
-    id: [],
-    name: [],
-    mention: []
-  };
-  const reaction = message.reactions.find(r => r.emoji.name === data.emoji.name);
-  if (reaction) {
-    const reaction_users = await reaction.fetchUsers();
-    reaction_users.forEach(user => {
-      if (!user.bot) {
-        entry_users.user.push(user);
-        entry_users.id.push(user.id);
-        entry_users.name.push(guild.member(user).displayName);
-        entry_users.mention.push(`<@${user.id}>`);
-      }
-    });
-  }
+  let entry_users = await getReactionUsers(guild, reaction);
+  console.log(entry_users.id);
 
   // リアクションユーザーのDB登録
   updateMatchUsers(match.match_id, entry_users.id);
 
-  // Embed Field
+  // Embed Field 設定
+  const embed = message.embeds.shift();
+  if (!embed) return;
   const new_embed = new discord.RichEmbed(embed);
+
+  // エントリー一覧
   let field_entry = new_embed.fields.find(e => e.name === match_config.embed.entry);
   if (entry_users.name.length === 0) {
     field_entry.value = match_config.entry_none;
@@ -74,9 +59,14 @@ exports.recruit = async (client, event) => {
     field_entry.value = entry_users.name.join("\n");
   }
 
-  // 募集人数に達した場合
+  // 残り人数
   const entry_size = match_config.entry_size;
-  if (entry_size <= entry_users.name.length) {
+  const remaining = entry_size - entry_users.name.length;
+  let field_remaining = new_embed.fields.find(e => e.name === match_config.embed.remaining);
+  field_remaining.value = remaining;
+  
+  // 募集人数に達した場合
+  if (remaining <= 0) {
     let new_field_status = new_embed.fields.find(e => e.name === match_config.embed.status);
     new_field_status.value = match_config.embed_status.closed;
 
@@ -93,19 +83,43 @@ exports.recruit = async (client, event) => {
 };
 
 /**
+ * 募集が終了しているか？
+ * @param {*} message_id 
+ */
+async function isRecruitClosed(message_id) {
+  const match_disco = await db.match_discord_info.findOne({
+    where: {
+      message_id: message_id
+    },
+    raw: true,
+    include: [
+      {
+        model: db.matches,
+        required: true,
+        where: { status: match_config.status.open }
+      }
+    ]
+  });
+  return !match_disco;
+}
+
+/**
  * ユーザーがエントリー可能か？
  * @param {*} channel 
  * @param {*} user 
+ * @param {*} match_id
  * @param {*} match_tier 
  */
-async function entryEnabled(channel, user, match_tier) {
+async function entryEnabled(channel, user, match_id, match_tier) {
 
-  const user_info = db.users.findOne({ where: { discord_id: user.id } });
+  const user_info = await db.users.findOne({ where: { discord_id: user.id } });
   if (!user_info) {
     await channel.send(`<@${user.id}> 先にユーザー登録してください`);
     return false;
   }
 
+  console.log(user_info.tier);
+  console.log(match_tier);
   if (user_info.tier !== match_tier) {
     await channel.send(`<@${user.id}> Tierが違います`);
     return false;
@@ -120,16 +134,46 @@ async function entryEnabled(channel, user, match_tier) {
       {
         model: db.matches,
         required: true,
-        where: { status: match_config.status.open }
+        where: {
+          match_id: { $ne: match_id },
+          status: match_config.status.open
+        }
       }
     ]
   });
-  console.log(match_users);
   if (match_users.length > 0) {
     await channel.send(`<@${user.id}> 他の試合でエントリー中です`);
     return false;
   }
   return true;
+}
+
+/**
+ * リアクションユーザ－情報取得
+ * @param {*} guild 
+ * @param {*} reaction 
+ */
+async function getReactionUsers(guild, reaction) {
+  let entry_users = {
+    user: [],
+    id: [],
+    name: [],
+    mention: []
+  };
+
+  if (reaction) {
+    const reaction_users = await reaction.fetchUsers();
+    reaction_users.forEach(user => {
+      if (!user.bot) {
+        entry_users.user.push(user);
+        entry_users.id.push(user.id);
+        entry_users.name.push(guild.member(user).displayName);
+        entry_users.mention.push(`<@${user.id}>`);
+      }
+    });
+  }
+
+  return entry_users;
 }
 
 /**
@@ -143,10 +187,11 @@ async function updateMatchUsers(matchId, entryUserIds) {
   const deleteArray = m_users.filter(mu => !entryUserIds.includes(mu.discord_id));
   if (deleteArray) {
     for (let i = 0; i < deleteArray.length; i++) {
+      console.log(deleteArray[i]);
       await db.match_users.destroy({
         where: {
           match_id: matchId,
-          discord_id: deleteArray[i]
+          discord_id: deleteArray[i].discord_id
         }
       });
     }
