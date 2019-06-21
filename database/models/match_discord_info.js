@@ -15,6 +15,10 @@ module.exports = (sequelize, DataTypes) => {
   });
   match_discord_info.associate = function(models) {
     // associations can be defined here
+    match_discord_info.belongsTo(models.matches, {
+      foreignKey: 'match_id',
+      targetKey: 'match_id'
+    });
   };
   match_discord_info.removeAttribute('id');
   return match_discord_info;
