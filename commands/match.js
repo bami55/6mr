@@ -33,11 +33,9 @@ exports.open = async (client, message) => {
       const role = message.guild.roles.get(tier.role_id);
       const embed = new discord.RichEmbed()
         .setColor('#0099ff')
-        .setTitle(match_config.embed.title)
-        .addField(match_config.embed.id, match.match_id, true)
-        .addField(match_config.embed.tier, role.name, true)
-        .addField(match_config.embed.remaining, match_config.entry_size, true)
+        .setTitle(`${role.name}【${match.match_id}】`)
         .addField(match_config.embed.status, match_config.embed_status.open, true)
+        .addField(match_config.embed.remaining, match_config.entry_size, true)
         .addField(match_config.embed.entry, match_config.entry_none);
       message.channel.send(embed)
         .then(async message => {

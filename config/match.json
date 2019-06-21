@@ -6,10 +6,7 @@
     "cancel": 9
   },
   "embed": {
-    "title": "【 受 付 】",
-    "id": "試合ID",
-    "tier": "Tier",
-    "remaining": "残り人数",
+    "remaining": "残",
     "status": "ステータス",
     "entry": "エントリー"
   },
