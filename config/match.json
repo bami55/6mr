@@ -14,6 +14,10 @@
     "open": "募集中",
     "closed": "募集は終了しました"
   },
+  "rate": {
+    "win": 15,
+    "lose": 12
+  },
   "entry_none": "なし",
   "entry_size": 2,
   "notification": "揃いましたので入室してください。",
