@@ -23,7 +23,11 @@ exports.create = async (client, message, commandArgs) => {
 
   db.users.create({
     discord_id: message.author.id,
-    tier: tier.tier
+    tier: tier.tier,
+    rate: tier.median_rate,
+    win: 0,
+    lose: 0,
+    streak: 0
   })
   .then(() => {
     message.reply('登録しました');
