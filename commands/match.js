@@ -8,7 +8,36 @@ const discord = require('discord.js');
 /**
  * 募集開始
  */
-exports.open = async (client, message) => {
+exports.open = (client, message) => {
+  openMatch(message);
+}
+
+/**
+ * 試合結果報告コマンド　勝利
+ */
+exports.report_win = (client, message, args) => {
+  report(true, message, args)
+};
+
+/**
+ * 試合結果報告コマンド　敗北
+ */
+exports.report_lose = (client, message, args) => {
+  report(false, message, args)
+};
+
+/**
+ * 試合キャンセルコマンド
+ */
+exports.cancel = (client, message, args) => {
+  cancelMatch(message, args)
+};
+
+/**
+ * 募集開始処理
+ * @param {*} message 
+ */
+async function openMatch(message) {
   const discord_id = message.author.id;
   const user = await db.users.findOne({ where: {discord_id: message.author.id}});
   if (!user) {
@@ -60,20 +89,6 @@ exports.open = async (client, message) => {
 }
 
 /**
- * 試合結果報告コマンド　勝利
- */
-exports.report_win = (client, message, args) => {
-  report(true, message, args)
-};
-
-/**
- * 試合結果報告コマンド　敗北
- */
-exports.report_lose = (client, message, args) => {
-  report(false, message, args)
-};
-
-/**
  * 試合結果報告処理
  * @param {*} isWin 
  * @param {*} message 
@@ -90,23 +105,24 @@ async function report (isWin, message, args) {
     return;
   }
 
-  const findMatch = await db.matches.findOne({ where: {match_id: args[0]}});
+  const match_id = args[0];
+  const findMatch = await db.matches.findOne({ where: {match_id: match_id}});
   if (!findMatch) {
-    message.reply(`試合ID【${args[0]}】は存在しません`);
+    message.reply(`【${match_id}】は存在しません`);
     return;
   } else if (findMatch.status !== match_config.status.in_progress) {
-    message.reply(`この試合は進行中ではありません`);
+    message.reply(`【${match_id}】は進行中ではありません`);
     return;
   }
 
   const findMatchUser = await db.match_users.findOne({
     where: {
-      match_id: args[0],
+      match_id: match_id,
       discord_id: message.author.id
     }
   });
   if (!findMatchUser) {
-    message.reply(`試合ID【 : ${args[0]} 】にエントリーしていません`);
+    message.reply(`【${match_id}】にエントリーしていません`);
     return;
   }
 
@@ -114,7 +130,7 @@ async function report (isWin, message, args) {
   await saveResult(isWin, findMatch, findMatchUser);
   
   // 部屋削除
-  const match_discord_info = await db.match_discord_info.findOne({where: {match_id: args[0]}});
+  const match_discord_info = await db.match_discord_info.findOne({where: {match_id: match_id}});
   if (match_discord_info) {
     const category = message.guild.channels.find(c => c.id === match_discord_info.category_id);
     await category.children.forEach(async ch => {
@@ -123,7 +139,7 @@ async function report (isWin, message, args) {
     await category.delete();
   }
 
-  message.reply('結果登録を完了しました');
+  message.reply(`【${match_id}】の試合結果を登録しました`);
 }
 
 /**
@@ -158,4 +174,53 @@ async function saveResult(isWin, findMatch, findMatchUser) {
     win_team: team,
     match_date: Date.now()
   });
+}
+
+async function cancelMatch(message, args) {
+  const command = '!cancel';
+  const params_title = `!${command} 試合ID`;
+  const example = `${command} 1024`;
+  const example_message = `${params_title}\n例\n${example}`;
+
+  if (!args || args.length === 0) {
+    message.reply(`試合IDを指定してください\n${example_message}`);
+    return;
+  }
+
+  const match_id = args[0];
+  const findMatch = await db.matches.findOne({ where: {match_id: match_id}});
+  if (!findMatch) {
+    message.reply(`【${match_id}】は存在しません`);
+    return;
+  } else if (findMatch.status === match_config.status.closed) {
+    message.reply(`【${match_id}】はすでに終了しています`);
+    return;
+  }
+
+  if (!message.member.hasPermission('ADMINISTRATOR')) {
+    const containUser = await db.match_users.findOne({
+      where: {
+        match_id: match_id,
+        discord_id: message.author.id
+      }
+    });
+    if (!containUser) {
+      message.reply(`【${match_id}】にエントリーしていません`);
+      return;
+    }
+  }
+
+  // 試合ステータス変更
+  let upd_match = {
+    match_id: match_id,
+    match_tier: findMatch.tier,
+    status: match_config.status.cancel
+  };
+  await db.matches.update(upd_match, {
+    where: {
+      match_id: match_id
+    }
+  });
+
+  message.reply(`【${match_id}】をキャンセルしました`);
 }

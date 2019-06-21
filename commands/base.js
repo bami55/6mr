@@ -27,6 +27,7 @@ exports.base = (client, message) => {
     case 'open': match.open(client, message); break;
     case 'win': match.report_win(client, message, args); break;
     case 'lose': match.report_lose(client, message, args); break;
+    case 'cancel': match.cancel(client, message, args); break;
   
     default: break;
   }
