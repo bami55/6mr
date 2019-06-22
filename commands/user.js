@@ -29,7 +29,8 @@ exports.create = async (client, message, commandArgs) => {
     lose: 0,
     streak: 0
   })
-  .then(() => {
+  .then(async () => {
+    await message.member.addRole(tier.role_id);
     message.reply('登録しました');
   })
   .catch(error => {
@@ -60,7 +61,9 @@ exports.delete = async (client, message) => {
     }
   
     search.destroy()
-    .then(() => {
+    .then(async () => {
+      const tier = await db.tiers.findOne({ where: {tier: search.tier}});
+      await member.removeRole(tier.role_id);
       message.reply(`${user_name} を削除しました`);
     })
     .catch(error => {
