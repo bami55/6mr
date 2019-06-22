@@ -57,7 +57,7 @@ async function createOrUpdate(isCreate, message, args) {
  * 役職設定
  * @param {*} isCreate 
  * @param {*} message 
- * @param {*} args 
+ * @param {*} args [0]:Tier, [1]:Tier名, [2]:レート最大値, [3]:レート中央値, [4]:レート最小値
  * @param {*} search 
  */
 function setRole(isCreate, message, args, search) {
