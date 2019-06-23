@@ -13,6 +13,10 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'match_id',
       targetKey: 'match_id'
     });
+    match_users.belongsTo(models.users, {
+      foreignKey: 'discord_id',
+      targetKey: 'discord_id'
+    });
   };
   match_users.removeAttribute('id');
   return match_users;
