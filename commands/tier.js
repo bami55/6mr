@@ -72,6 +72,7 @@ function setRole(isCreate, message, args, search) {
   };
 
   if (isCreate) {
+    // 追加
     message.guild.createRole({
       name: tier_name
     })
@@ -92,6 +93,7 @@ function setRole(isCreate, message, args, search) {
         message.reply(`${tier_name} の役職作成中にエラーが発生しました`);
       });
   } else {
+    // 更新
     const role = message.guild.roles.get(search.role_id);
     role.setName(tier_name)
       .then(() => {
