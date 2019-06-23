@@ -69,6 +69,26 @@ exports.recruit = async (client, event) => {
     let new_field_status = new_embed.fields.find(e => e.name === match_config.embed.status);
     new_field_status.value = match_config.embed_status.closed;
 
+    // TODO: チーム分け
+    const players = db.match_users.findAll({
+      where: {
+        match_id: match.match_id
+      },
+      raw: true,
+      include: [
+        {
+          model: db.users,
+          required: true,
+          order: [
+            ['rate', 'DESC'],
+            ['win', 'DESC'],
+            ['lose', 'ASC']
+          ]
+        }
+      ]
+    });
+    console.log(players);
+
     // メンションでエントリーユーザーに通知
     channel.send(`${entry_users.mention.join(' ')}\n${match_config.notification}`);
 
@@ -174,7 +194,7 @@ async function getReactionUsers(guild, reaction) {
 }
 
 /**
- * 試合ユーザー
+ * リアクションのユーザー一覧をDBに反映
  * @param {*} matchId 
  * @param {*} entryUserIds 
  */
