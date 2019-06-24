@@ -68,8 +68,6 @@ async function updateUser(guild, result, user) {
     // レート計算
     updUser = calcRating(isWin, updUser);
 
-    console.log(updUser);
-
     // Tierチェンジ
     let resultChangeTier = await changeTier(
       guildMember,
@@ -80,7 +78,7 @@ async function updateUser(guild, result, user) {
     updUser = resultChangeTier.updUser;
     reportResult = resultChangeTier.reportResult;
 
-    await db.users.update(updUser, {
+    db.users.update(updUser, {
       where: {
         discord_id: updUser.discord_id
       }
