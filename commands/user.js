@@ -30,7 +30,7 @@ exports.create = async (client, message, commandArgs) => {
     .create({
       discord_id: message.author.id,
       tier: tier.tier,
-      rate: tier.median_rate,
+      rate: tier.init_rate,
       win: 0,
       lose: 0,
       streak: 0
@@ -97,7 +97,7 @@ exports.update = async (client, message) => {
 
   let updUser = Object.assign({}, userInfo);
   updUser.tier = tier.tier;
-  updUser.rate = tier.median_rate;
+  updUser.rate = tier.init_rate;
   updUser.streak = 0;
 
   // DB更新

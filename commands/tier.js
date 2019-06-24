@@ -72,7 +72,7 @@ function setRole(isCreate, message, args, search) {
     tier: args[0],
     role_id: null,
     max_rate: args[2],
-    median_rate: args[3],
+    init_rate: args[3],
     min_rate: args[4]
   };
 

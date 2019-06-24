@@ -16,7 +16,7 @@ module.exports = {
         default: 0,
         type: Sequelize.INTEGER
       },
-      median_rate: {
+      init_rate: {
         allowNull: false,
         default: 0,
         type: Sequelize.INTEGER

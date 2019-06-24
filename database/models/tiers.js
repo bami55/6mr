@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
       tier: DataTypes.INTEGER,
       role_id: DataTypes.STRING,
       max_rate: DataTypes.INTEGER,
-      median_rate: DataTypes.INTEGER,
+      init_rate: DataTypes.INTEGER,
       min_rate: DataTypes.INTEGER
     },
     {
