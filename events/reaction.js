@@ -7,6 +7,7 @@ const _recruit_emoji = matchConfig.reaction_emoji;
 const _event_type_add = "MESSAGE_REACTION_ADD";
 
 const discord = require("discord.js");
+const Sequelize = require("sequelize");
 
 /**
  * 募集エントリー
@@ -57,7 +58,7 @@ exports.entry = async (client, event) => {
   let entryUsers = await getReactionUsers(guild, reaction);
 
   // リアクションユーザーのDB登録
-  updateMatchUsers(match.match_id, entryUsers.id);
+  await updateMatchUsers(match.match_id, entryUsers.id);
 
   // Embed Field 設定
   const embed = message.embeds.shift();
@@ -90,7 +91,7 @@ exports.entry = async (client, event) => {
     new_field_status.value = matchConfig.embed_status.closed;
 
     // TODO: チーム分け
-    const players = db.match_users.findAll({
+    const players = await db.match_users.findAll({
       where: {
         match_id: match.match_id
       },
@@ -98,11 +99,21 @@ exports.entry = async (client, event) => {
       include: [
         {
           model: db.users,
-          required: true,
-          order: [["rate", "DESC"], ["win", "DESC"], ["lose", "ASC"]]
+          required: true
         }
+      ],
+      order: [
+        [db.users, "rate", "DESC"],
+        [db.users, "win", "DESC"],
+        [db.users, "lose", "ASC"]
       ]
     });
+    console.log(players);
+    if (players) {
+      for (let i = 0; i < players.length; i++) {
+        console.log(players[i].discord_id);
+      }
+    }
 
     // メンションでエントリーユーザーに通知
     channel.send(
