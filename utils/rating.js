@@ -1,7 +1,7 @@
-'use strict';
+"use strict";
 
-const match_config = require(__dirname + '/../config/match.json');
-const db = require(__dirname + '/../database/models/index.js');
+const matchConfig = require(__dirname + "/../config/match.json");
+const db = require(__dirname + "/../database/models/index.js");
 
 exports.updateRating = async (guild, matchId) => {
   // 試合結果取得
@@ -29,17 +29,19 @@ exports.updateRating = async (guild, matchId) => {
   }
 
   // TODO: 特定のチャンネルに試合結果、レート変動を出力する
-}
+};
 
 /**
  * ユーザー更新
- * @param {*} guild 
- * @param {*} result 
- * @param {*} user 
+ * @param {*} guild
+ * @param {*} result
+ * @param {*} user
  */
 async function updateUser(guild, result, user) {
   const guildMember = await guild.fetchMember(user.discord_id);
-  const userInfo = await db.users.findOne({ where: { discord_id: user.discord_id } });
+  const userInfo = await db.users.findOne({
+    where: { discord_id: user.discord_id }
+  });
 
   // 結果出力用
   let reportResult = {
@@ -48,7 +50,7 @@ async function updateUser(guild, result, user) {
     tier: null
   };
   reportResult.name = guildMember.displayName;
-  
+
   let updUser = Object.assign({}, userInfo);
   let isWin = result.win_team === user.team;
 
@@ -57,15 +59,20 @@ async function updateUser(guild, result, user) {
     updUser = calcRating(isWin, updUser);
 
     // Tierチェンジ
-    let resultChangeTier = await changeTier(guildMember, userInfo, updUser, reportResult);
+    let resultChangeTier = await changeTier(
+      guildMember,
+      userInfo,
+      updUser,
+      reportResult
+    );
     updUser = resultChangeTier.updUser;
     reportResult = resultChangeTier.reportResult;
-    
+
     // レート変動出力
     if (isWin) {
-      reportResult.rate = `${updUser.rate} (+${match_config.rate.win})`;
+      reportResult.rate = `${updUser.rate} (+${matchConfig.rate.win})`;
     } else {
-      reportResult.rate = `${updUser.rate} (-${match_config.rate.lose})`;
+      reportResult.rate = `${updUser.rate} (-${matchConfig.rate.lose})`;
     }
   }
 
@@ -75,16 +82,16 @@ async function updateUser(guild, result, user) {
 
 /**
  * レート計算
- * @param {*} isWin 
- * @param {*} updUser 
+ * @param {*} isWin
+ * @param {*} updUser
  */
 function calcRating(isWin, updUser) {
   if (isWin) {
-    updUser.rate += match_config.rate.win;
+    updUser.rate += matchConfig.rate.win;
     updUser.win += 1;
     updUser.streak += 1;
   } else {
-    updUser.rate -= match_config.rate.lose;
+    updUser.rate -= matchConfig.rate.lose;
     updUser.lose += 1;
     updUser.streak = 0;
   }
@@ -92,10 +99,10 @@ function calcRating(isWin, updUser) {
 
 /**
  * Tierチェンジ（Tier昇格・降格、役職設定）
- * @param {*} guildMember 
- * @param {*} userInfo 
- * @param {*} updUser 
- * @param {*} reportResult 
+ * @param {*} guildMember
+ * @param {*} userInfo
+ * @param {*} updUser
+ * @param {*} reportResult
  */
 async function changeTier(guildMember, userInfo, updUser, reportResult) {
   // Tierデータ取得
@@ -126,7 +133,7 @@ async function changeTier(guildMember, userInfo, updUser, reportResult) {
 
 /**
  * レートに該当するTierを取得
- * @param {*} rate 
+ * @param {*} rate
  */
 async function getTierByRate(rate) {
   const tier = await db.tiers.findOne({
