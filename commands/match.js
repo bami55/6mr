@@ -191,7 +191,7 @@ async function saveResult(isWin, findMatch, findMatchUser) {
   }
 
   // 試合結果登録
-  await db.match_results.upsert({
+  await db.match_results.create({
     match_id: findMatch.match_id,
     win_team: team,
     match_date: Date.now()
