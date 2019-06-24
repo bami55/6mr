@@ -90,30 +90,8 @@ exports.entry = async (client, event) => {
     );
     new_field_status.value = matchConfig.embed_status.closed;
 
-    // TODO: チーム分け
-    const players = await db.match_users.findAll({
-      where: {
-        match_id: match.match_id
-      },
-      raw: true,
-      include: [
-        {
-          model: db.users,
-          required: true
-        }
-      ],
-      order: [
-        [db.users, "rate", "DESC"],
-        [db.users, "win", "DESC"],
-        [db.users, "lose", "ASC"]
-      ]
-    });
-    console.log(players);
-    if (players) {
-      for (let i = 0; i < players.length; i++) {
-        console.log(players[i].discord_id);
-      }
-    }
+    // チーム分け
+    const teams = chooseUpTeam(match.match_id);
 
     // メンションでエントリーユーザーに通知
     channel.send(
@@ -260,6 +238,48 @@ async function updateMatchUsers(matchId, entryUserIds) {
       });
     }
   }
+}
+
+/**
+ * チーム分け
+ * @param {*} matchId 
+ */
+async function chooseUpTeam(matchId) {
+  let teams = {
+    blue: [],
+    orange: []
+  };
+
+  // プレイヤーをレートの降順、勝数の降順、負数の昇順でソートする
+  const players = await db.match_users.findAll({
+    where: {
+      match_id: matchId
+    },
+    raw: true,
+    include: [
+      {
+        model: db.users,
+        required: true
+      }
+    ],
+    order: [
+      [db.users, "rate", "DESC"],
+      [db.users, "win", "DESC"],
+      [db.users, "lose", "ASC"]
+    ]
+  });
+  
+  // 上から順にプレイヤーを分配していく
+  if (players) {
+    for (let i = 0; i < players.length; i++) {
+      if (i %% 2 === 0) {
+        teams.blue.push(players);
+      } else {
+        teams.orange.push(players);
+      }
+    }
+  }
+  return teams;
 }
 
 /**
