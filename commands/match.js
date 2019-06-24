@@ -68,9 +68,17 @@ async function openMatch(message) {
       const embed = new discord.RichEmbed()
         .setColor("#0099ff")
         .setTitle(`${role.name}【${match.match_id}】`)
-        .addField(matchConfig.embed.status, matchConfig.embed_status.open, true)
-        .addField(matchConfig.embed.remaining, matchConfig.entry_size, true)
-        .addField(matchConfig.embed.entry, matchConfig.entry_none);
+        .addField(
+          matchConfig.embed_field.status,
+          matchConfig.embed_status.open,
+          true
+        )
+        .addField(
+          matchConfig.embed_field.remaining,
+          matchConfig.entry_size,
+          true
+        )
+        .addField(matchConfig.embed_field.entry, matchConfig.entry_none);
       message.channel.send(embed).then(async message => {
         // 試合用Discord情報登録
         await db.match_discord_info.create({
@@ -145,8 +153,8 @@ async function report(isWin, message, args) {
 
 /**
  * 部屋削除
- * @param {*} guild 
- * @param {*} matchId 
+ * @param {*} guild
+ * @param {*} matchId
  */
 async function deleteMatchChannel(guild, matchId) {
   const matchDiscordInfo = await db.match_discord_info.findOne({
