@@ -5,10 +5,12 @@
     "closed": 2,
     "cancel": 9
   },
-  "embed": {
+  "embed_field": {
     "remaining": "残",
     "status": "ステータス",
-    "entry": "エントリー"
+    "entry": "エントリー",
+    "team_blue": "Blue",
+    "team_orange": "Orange"
   },
   "embed_status": {
     "open": "募集中",
@@ -17,6 +19,10 @@
   "rate": {
     "win": 15,
     "lose": 12
+  },
+  "team": {
+    "blue": 0,
+    "orange": 1
   },
   "entry_none": "なし",
   "entry_size": 2,

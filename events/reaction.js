@@ -67,7 +67,7 @@ exports.entry = async (client, event) => {
 
   // エントリー一覧
   let field_entry = new_embed.fields.find(
-    e => e.name === matchConfig.embed.entry
+    f => f.name === matchConfig.embed_field.entry
   );
   if (entryUsers.name.length === 0) {
     field_entry.value = matchConfig.entry_none;
@@ -79,28 +79,34 @@ exports.entry = async (client, event) => {
   const entrySize = matchConfig.entry_size;
   const remaining = entrySize - entryUsers.name.length;
   let field_remaining = new_embed.fields.find(
-    e => e.name === matchConfig.embed.remaining
+    f => f.name === matchConfig.embed_field.remaining
   );
   field_remaining.value = remaining;
 
   // 募集人数に達した場合
   if (remaining <= 0) {
     let new_field_status = new_embed.fields.find(
-      e => e.name === matchConfig.embed.status
+      f => f.name === matchConfig.embed_field.status
     );
     new_field_status.value = matchConfig.embed_status.closed;
 
     // チーム分け
-    const teams = chooseUpTeam(match.match_id);
+    const teams = await chooseUpTeam(match.match_id);
+    const blueFieldValue = getTeamPlayerFieldValue(guild, teams.blue);
+    const orangeFieldValue = getTeamPlayerFieldValue(guild, teams.orange);
 
-    // TODO 試合情報、チーム情報のEmbedを作成
-    const embed = null;
+    // 試合情報、チーム情報のEmbedを作成
+    const teamEmbed = new discord.RichEmbed()
+      .setColor("#0099ff")
+      .setTitle(embed.title)
+      .addField(matchConfig.embed_field.team_blue, blueFieldValue, true)
+      .addField(matchConfig.embed_field.team_orange, orangeFieldValue, true);
 
     // メンションでエントリーユーザーに通知
     channel.send(
       `${entryUsers.mention.join(" ")}\n${matchConfig.notification}`,
       {
-        embed: embed
+        embed: teamEmbed
       }
     );
 
@@ -278,14 +284,53 @@ async function chooseUpTeam(matchId) {
   // 上から順にプレイヤーを分配していく
   if (players) {
     for (let i = 0; i < players.length; i++) {
+      const player = players[i];
       if (i % 2 === 0) {
-        teams.blue.push(players);
+        teams.blue.push(player);
+        updateMatchPlayerTeam(player, matchConfig.team.blue);
       } else {
-        teams.orange.push(players);
+        teams.orange.push(player);
+        updateMatchPlayerTeam(player, matchConfig.team.orange);
       }
     }
   }
   return teams;
+}
+
+/**
+ * プレイヤーのチーム分け結果をDBに反映する
+ * @param {*} player
+ * @param {*} team
+ */
+function updateMatchPlayerTeam(player, team) {
+  db.match_users.update(
+    {
+      match_id: player.match_id,
+      discord_id: player.discord_id,
+      team: team
+    },
+    {
+      where: {
+        match_id: player.match_id,
+        discord_id: player.discord_id
+      }
+    }
+  );
+}
+
+/**
+ * チームプレイヤーのフィールド出力値取得
+ * @param {*} guild
+ * @param {*} players
+ */
+function getTeamPlayerFieldValue(guild, players) {
+  let value = "";
+  players.forEach(player => {
+    const member = guild.members.get(player.discord_id);
+    if (value) value += "\n";
+    value += member.displayName;
+  });
+  return value;
 }
 
 /**
