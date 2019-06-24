@@ -93,9 +93,15 @@ exports.entry = async (client, event) => {
     // チーム分け
     const teams = chooseUpTeam(match.match_id);
 
+    // TODO 試合情報、チーム情報のEmbedを作成
+    const embed = null;
+
     // メンションでエントリーユーザーに通知
     channel.send(
-      `${entryUsers.mention.join(" ")}\n${matchConfig.notification}`
+      `${entryUsers.mention.join(" ")}\n${matchConfig.notification}`,
+      {
+        embed: embed
+      }
     );
 
     // 試合ステータス変更
@@ -242,7 +248,7 @@ async function updateMatchUsers(matchId, entryUserIds) {
 
 /**
  * チーム分け
- * @param {*} matchId 
+ * @param {*} matchId
  */
 async function chooseUpTeam(matchId) {
   let teams = {
@@ -268,11 +274,11 @@ async function chooseUpTeam(matchId) {
       [db.users, "lose", "ASC"]
     ]
   });
-  
+
   // 上から順にプレイヤーを分配していく
   if (players) {
     for (let i = 0; i < players.length; i++) {
-      if (i %% 2 === 0) {
+      if (i % 2 === 0) {
         teams.blue.push(players);
       } else {
         teams.orange.push(players);
@@ -341,7 +347,7 @@ async function createMatchChannel(guild, match, entryUsersId) {
   let updDiscordInfo = {
     match_id: matchDiscordInfo.match_id,
     message_id: matchDiscordInfo.id,
-    category_id: categoryChannel.id,
+    category_id: categoryChannel.id
   };
 
   // 試合用チャンネルをカテゴリ内に作成
