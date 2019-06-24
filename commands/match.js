@@ -4,6 +4,7 @@ require("dotenv").config();
 const matchConfig = require(__dirname + "/../config/match.json");
 const db = require(__dirname + "/../database/models/index.js");
 const discord = require("discord.js");
+const rating = require(__dirname + "/../utils/rating.js");
 
 /**
  * 募集開始
@@ -133,12 +134,26 @@ async function report(isWin, message, args) {
   // DB登録
   await saveResult(isWin, findMatch, findMatchUser);
 
+  // レーティング更新
+  await rating.updateRating(message.guild, matchId);
+
   // 部屋削除
+  await deleteMatchChannel(message.guild, matchId);
+
+  message.reply(`【${matchId}】の試合結果を登録しました`);
+}
+
+/**
+ * 部屋削除
+ * @param {*} guild 
+ * @param {*} matchId 
+ */
+async function deleteMatchChannel(guild, matchId) {
   const matchDiscordInfo = await db.match_discord_info.findOne({
     where: { match_id: matchId }
   });
   if (matchDiscordInfo) {
-    const category = message.guild.channels.find(
+    const category = guild.channels.find(
       c => c.id === matchDiscordInfo.category_id
     );
     await category.children.forEach(async ch => {
@@ -146,8 +161,6 @@ async function report(isWin, message, args) {
     });
     await category.delete();
   }
-
-  message.reply(`【${matchId}】の試合結果を登録しました`);
 }
 
 /**
@@ -224,6 +237,9 @@ async function cancelMatch(message, args) {
       return;
     }
   }
+
+  // 部屋削除
+  await deleteMatchChannel(message.guild, matchId);
 
   // 試合ステータス変更
   let updMatch = {

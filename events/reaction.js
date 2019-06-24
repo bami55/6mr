@@ -103,7 +103,6 @@ exports.entry = async (client, event) => {
         }
       ]
     });
-    console.log(players);
 
     // メンションでエントリーユーザーに通知
     channel.send(
@@ -111,10 +110,10 @@ exports.entry = async (client, event) => {
     );
 
     // 試合ステータス変更
-    await changeMatchStatus(match, entryUsers.id);
+    changeMatchStatus(match, entryUsers.id);
 
     // 部屋作成
-    await createMatchChannel(guild, match, entryUsers.id);
+    createMatchChannel(guild, match, entryUsers.id);
   }
   message.edit(new_embed);
 };
@@ -309,15 +308,9 @@ async function createMatchChannel(guild, match, entryUsersId) {
     where: { match_id: matchId }
   });
   let updDiscordInfo = {
-    matchId: matchDiscordInfo.match_id,
-    messageId: matchDiscordInfo.id,
-    categoryId: categoryChannel.id,
-    waitingTextChannelId: null,
-    waitingVoiceChannelId: null,
-    team0TextChannelId: null,
-    team0VoiceChannelId: null,
-    team1TextChannelId: null,
-    team1VoiceChannelId: null
+    match_id: matchDiscordInfo.match_id,
+    message_id: matchDiscordInfo.id,
+    category_id: categoryChannel.id,
   };
 
   // 試合用チャンネルをカテゴリ内に作成
@@ -328,15 +321,15 @@ async function createMatchChannel(guild, match, entryUsersId) {
     categoryChannel,
     `【${matchId}】WaitingRoom`
   );
-  updDiscordInfo.waitingVoiceChannelId = vc.id;
+  updDiscordInfo.waiting_voice_ch_id = vc.id;
 
   // Blue Team VoiceChannel
   vc = await createChannelInCategory(categoryChannel, `【${matchId}】Blue`);
-  updDiscordInfo.team0VoiceChannelId = vc.id;
+  updDiscordInfo.team0_voice_ch_id = vc.id;
 
   // Orange Team VoiceChannel
   vc = await createChannelInCategory(categoryChannel, `【${matchId}】Orange`);
-  updDiscordInfo.team1VoiceChannelId = vc.id;
+  updDiscordInfo.team1_voice_ch_id = vc.id;
 
   // DBに試合用チャンネル情報を登録
   await db.match_discord_info.update(updDiscordInfo, {

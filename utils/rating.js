@@ -2,6 +2,8 @@
 
 const matchConfig = require(__dirname + "/../config/match.json");
 const db = require(__dirname + "/../database/models/index.js");
+const Sequelize = require("sequelize");
+const Op = Sequelize.Op;
 
 exports.updateRating = async (guild, matchId) => {
   // 試合結果取得
@@ -51,12 +53,22 @@ async function updateUser(guild, result, user) {
   };
   reportResult.name = guildMember.displayName;
 
-  let updUser = Object.assign({}, userInfo);
+  let updUser = {
+    discord_id: userInfo.discord_id,
+    tier: userInfo.tier,
+    rate: userInfo.rate,
+    win: userInfo.win,
+    lose: userInfo.lose,
+    streak: userInfo.streak
+  };
+
   let isWin = result.win_team === user.team;
 
   if (userInfo) {
     // レート計算
     updUser = calcRating(isWin, updUser);
+
+    console.log(updUser);
 
     // Tierチェンジ
     let resultChangeTier = await changeTier(
@@ -67,6 +79,12 @@ async function updateUser(guild, result, user) {
     );
     updUser = resultChangeTier.updUser;
     reportResult = resultChangeTier.reportResult;
+
+    await db.users.update(updUser, {
+      where: {
+        discord_id: updUser.discord_id
+      }
+    });
 
     // レート変動出力
     if (isWin) {
@@ -95,6 +113,7 @@ function calcRating(isWin, updUser) {
     updUser.lose += 1;
     updUser.streak = 0;
   }
+  return updUser;
 }
 
 /**
@@ -106,20 +125,19 @@ function calcRating(isWin, updUser) {
  */
 async function changeTier(guildMember, userInfo, updUser, reportResult) {
   // Tierデータ取得
-  const oldTier = getTierByRate(userInfo.rate);
-  const newTier = getTierByRate(updUser.rate);
+  const oldTier = await getTierByRate(userInfo.rate);
+  const newTier = await getTierByRate(updUser.rate);
 
   // Tier役職取得
-  const oldTierRole = await guildMember.guild.roles.get(oldTier);
-  const newTierRole = await guildMember.guild.roles.get(newTier);
+  const oldTierRole = await guildMember.guild.roles.get(oldTier.role_id);
+  const newTierRole = await guildMember.guild.roles.get(newTier.role_id);
 
   if (newTier.tier !== oldTier.tier) {
     // Tier変更
     updUser.tier = newTier.tier;
-    // TODO: 降格したときに中央値にするかどうかは確認中
-    updUser.rate = newTier.median_rate;
-    await guildMember.removeRole(oldTier.role_id);
-    await guildMember.addRole(newTier.role_id);
+    updUser.rate = newTier.init_rate;
+    await guildMember.removeRole(oldTierRole);
+    await guildMember.addRole(newTierRole);
     reportResult.tier = `${oldTierRole.name} -> ${newTierRole.name}`;
   } else {
     // Tier維持
@@ -139,10 +157,10 @@ async function getTierByRate(rate) {
   const tier = await db.tiers.findOne({
     where: {
       max_rate: {
-        $lte: rate
+        [Op.gte]: rate
       },
       min_rate: {
-        $gte: rate
+        [Op.lte]: rate
       }
     }
   });
