@@ -1,10 +1,10 @@
-"use strict";
+'use strict';
 
-require("dotenv").config();
-const matchConfig = require(__dirname + "/../config/match.json");
-const db = require(__dirname + "/../database/models/index.js");
-const discord = require("discord.js");
-const rating = require(__dirname + "/../utils/rating.js");
+require('dotenv').config();
+const matchConfig = require(__dirname + '/../config/match.json');
+const db = require(__dirname + '/../database/models/index.js');
+const discord = require('discord.js');
+const rating = require(__dirname + '/../util/rating.js');
 
 /**
  * 募集開始
@@ -43,17 +43,17 @@ async function openMatch(message) {
     where: { discord_id: message.author.id }
   });
   if (!user) {
-    message.reply("先にユーザー登録してください");
+    message.reply('先にユーザー登録してください');
     return;
   }
 
   const tier = await db.tiers.findOne({ where: { tier: user.tier } });
   if (!tier) {
-    message.reply("ユーザーのTierが不正です");
+    message.reply('ユーザーのTierが不正です');
     return;
   }
 
-  const maxMatchId = await db.matches.max("match_id");
+  const maxMatchId = await db.matches.max('match_id');
 
   // 試合データ登録
   db.matches
@@ -66,18 +66,10 @@ async function openMatch(message) {
       // 募集メッセージ送信
       const role = message.guild.roles.get(tier.role_id);
       const embed = new discord.RichEmbed()
-        .setColor("#0099ff")
+        .setColor('#0099ff')
         .setTitle(`${role.name}【${match.match_id}】`)
-        .addField(
-          matchConfig.embed_field.status,
-          matchConfig.embed_status.open,
-          true
-        )
-        .addField(
-          matchConfig.embed_field.remaining,
-          matchConfig.entry_size,
-          true
-        )
+        .addField(matchConfig.embed_field.status, matchConfig.embed_status.open, true)
+        .addField(matchConfig.embed_field.remaining, matchConfig.entry_size, true)
         .addField(matchConfig.embed_field.entry, matchConfig.entry_none);
       message.channel.send(embed).then(async message => {
         // 試合用Discord情報登録
@@ -97,7 +89,7 @@ async function openMatch(message) {
     })
     .catch(error => {
       console.error(error);
-      message.reply("試合の登録中にエラーが発生しました");
+      message.reply('試合の登録中にエラーが発生しました');
     });
 }
 
@@ -108,7 +100,7 @@ async function openMatch(message) {
  * @param {*} args
  */
 async function report(isWin, message, args) {
-  const command = isWin ? "!win" : "!lose";
+  const command = isWin ? '!win' : '!lose';
   const paramsTitle = `!${command} 試合ID`;
   const example = `${command} 1024`;
   const exampleMessage = `${paramsTitle}\n例\n${example}`;
@@ -161,13 +153,11 @@ async function deleteMatchChannel(guild, matchId) {
     where: { match_id: matchId }
   });
   if (matchDiscordInfo) {
-    const category = guild.channels.find(
-      c => c.id === matchDiscordInfo.category_id
-    );
-    await category.children.forEach(async ch => {
-      await ch.delete();
-    });
-    await category.delete();
+    const category = guild.channels.find(c => c.id === matchDiscordInfo.category_id);
+    if (category) {
+      await category.children.forEach(async ch => await ch.delete());
+      await category.delete();
+    }
   }
 }
 
@@ -191,10 +181,7 @@ async function saveResult(isWin, findMatch, findMatchUser) {
   });
 
   let team = 0;
-  if (
-    (isWin && findMatchUser.team === 1) ||
-    (!isWin && findMatchUser.team === 0)
-  ) {
+  if ((isWin && findMatchUser.team === 1) || (!isWin && findMatchUser.team === 0)) {
     team = 1;
   }
 
@@ -212,7 +199,7 @@ async function saveResult(isWin, findMatch, findMatchUser) {
  * @param {*} args
  */
 async function cancelMatch(message, args) {
-  const command = "!cancel";
+  const command = '!cancel';
   const paramsTitle = `!${command} 試合ID`;
   const example = `${command} 1024`;
   const exampleMessage = `${paramsTitle}\n例\n${example}`;
@@ -233,7 +220,7 @@ async function cancelMatch(message, args) {
   }
 
   // 管理者権限を持っていないユーザーは自分のエントリー試合のみキャンセルできる
-  if (!message.member.hasPermission("ADMINISTRATOR")) {
+  if (!message.member.hasPermission('ADMINISTRATOR')) {
     const containUser = await db.match_users.findOne({
       where: {
         match_id: matchId,
