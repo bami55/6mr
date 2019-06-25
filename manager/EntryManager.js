@@ -24,29 +24,25 @@ class EntryManager {
   static async entry(client, type, data) {
     // bot or 指定絵文字以外は中断
     const user = client.users.get(data.user_id);
+    const guild = client.guilds.get(data.guild_id);
     if (user.bot) return;
     if (data.emoji.name !== _recruit_emoji) return;
-
-    const guild = client.guilds.get(data.guild_id);
     if (!guild) return;
 
-    const matchDiscoInfo = await db.match_discord_info.findOne({
-      where: { message_id: data.message_id }
-    });
-    if (!matchDiscoInfo) return;
-
-    // すでに募集が終了していたら中断
-    if (await isRecruitClosed(data.message_id)) return;
+    // 募集中の試合用Discord情報取得
+    const matchDiscordInfo = await getOpenMatchDiscordInfo(data.message_id);
+    if (!matchDiscordInfo) return;
 
     const channel = await client.channels.get(data.channel_id);
     const message = await channel.fetchMessage(data.message_id);
     const match = await db.matches.findOne({
-      where: { match_id: matchDiscoInfo.match_id }
+      where: { match_id: matchDiscordInfo.match_id }
     });
 
     // エントリーチェック
     const reaction = message.reactions.find(r => r.emoji.name === data.emoji.name);
     if (type === _event_type_add) {
+      // エントリー不可ならリアクション削除
       const isEnabled = await entryEnabled(channel, user, match, match.match_tier);
       if (!isEnabled) {
         if (reaction) await reaction.remove(user);
@@ -63,9 +59,10 @@ class EntryManager {
     // Embed Field 設定
     const embed = message.embeds.shift();
     if (!embed) return;
+
     const new_embed = new discord.RichEmbed(embed);
 
-    // エントリー一覧
+    // Embed Field エントリー一覧
     let field_entry = new_embed.fields.find(f => f.name === matchConfig.embed_field.entry);
     if (entryUsers.name.length === 0) {
       field_entry.value = matchConfig.entry_none;
@@ -73,7 +70,7 @@ class EntryManager {
       field_entry.value = entryUsers.name.join('\n');
     }
 
-    // 残り人数
+    // Embed Field 残り人数
     const entrySize = matchConfig.entry_size;
     const remaining = entrySize - entryUsers.name.length;
     let field_remaining = new_embed.fields.find(f => f.name === matchConfig.embed_field.remaining);
@@ -93,15 +90,16 @@ class EntryManager {
       // 部屋作成
       createMatchChannel(guild, match, entryUsers.id);
     }
+    // 募集メッセージ Embed の編集
     message.edit(new_embed);
   }
 }
 
 /**
- * 募集が終了しているか？
+ * 募集中の試合用Discord情報取得
  * @param {*} message_id
  */
-async function isRecruitClosed(message_id) {
+async function getOpenMatchDiscordInfo(message_id) {
   const matchDiscoInfo = await db.match_discord_info.findOne({
     where: {
       message_id: message_id
@@ -115,7 +113,7 @@ async function isRecruitClosed(message_id) {
       }
     ]
   });
-  return !matchDiscoInfo;
+  return matchDiscoInfo;
 }
 
 /**
