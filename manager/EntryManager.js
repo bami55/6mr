@@ -15,6 +15,12 @@ class EntryManager {
     throw new Error(`The ${this.constructor.name} class may not be instantiated.`);
   }
 
+  /**
+   * エントリー処理
+   * @param {*} client
+   * @param {*} type
+   * @param {*} data
+   */
   static async entry(client, type, data) {
     // bot or 指定絵文字以外は中断
     const user = client.users.get(data.user_id);
