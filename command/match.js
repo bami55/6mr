@@ -5,12 +5,13 @@ const matchConfig = require(__dirname + '/../config/match.json');
 const db = require(__dirname + '/../database/models/index.js');
 const discord = require('discord.js');
 const rating = require(__dirname + '/../util/rating.js');
+const MatchManager = require(__dirname + '/../manager/MatchManager.js');
 
 /**
  * 募集開始
  */
 exports.open = (client, message) => {
-  openMatch(message);
+  MatchManager.openMatch(message);
 };
 
 /**
@@ -33,65 +34,6 @@ exports.reportLose = (client, message, args) => {
 exports.cancel = (client, message, args) => {
   cancelMatch(message, args);
 };
-
-/**
- * 募集開始処理
- * @param {*} message
- */
-async function openMatch(message) {
-  const user = await db.users.findOne({
-    where: { discord_id: message.author.id }
-  });
-  if (!user) {
-    message.reply('先にユーザー登録してください');
-    return;
-  }
-
-  const tier = await db.tiers.findOne({ where: { tier: user.tier } });
-  if (!tier) {
-    message.reply('ユーザーのTierが不正です');
-    return;
-  }
-
-  const maxMatchId = await db.matches.max('match_id');
-
-  // 試合データ登録
-  db.matches
-    .create({
-      match_id: maxMatchId + 1,
-      match_tier: tier.tier,
-      status: matchConfig.status.open
-    })
-    .then(match => {
-      // 募集メッセージ送信
-      const role = message.guild.roles.get(tier.role_id);
-      const embed = new discord.RichEmbed()
-        .setColor('#0099ff')
-        .setTitle(`${role.name}【${match.match_id}】`)
-        .addField(matchConfig.embed_field.status, matchConfig.embed_status.open, true)
-        .addField(matchConfig.embed_field.remaining, matchConfig.entry_size, true)
-        .addField(matchConfig.embed_field.entry, matchConfig.entry_none);
-      message.channel.send(embed).then(async message => {
-        // 試合用Discord情報登録
-        await db.match_discord_info.create({
-          match_id: match.match_id,
-          message_id: message.id,
-          category_id: null,
-          waiting_text_ch_id: null,
-          waiting_voice_ch_id: null,
-          team0_text_ch_id: null,
-          team0_voice_ch_id: null,
-          team1_text_ch_id: null,
-          team1_voice_ch_id: null
-        });
-        message.react(matchConfig.reaction_emoji);
-      });
-    })
-    .catch(error => {
-      console.error(error);
-      message.reply('試合の登録中にエラーが発生しました');
-    });
-}
 
 /**
  * 試合結果報告処理
