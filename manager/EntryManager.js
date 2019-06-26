@@ -3,6 +3,7 @@
 require('dotenv').config();
 const matchConfig = require(__dirname + '/../config/match.json');
 const db = require(__dirname + '/../database/models/index.js');
+const Util = require(__dirname + '/../util/Util.js');
 const _recruit_emoji = matchConfig.reaction_emoji;
 const _event_type_add = 'MESSAGE_REACTION_ADD';
 
@@ -405,15 +406,15 @@ async function createMatchChannel(guild, match, entryUsersId) {
   let vc = null;
 
   // Waiting Room VoiceChannel
-  vc = await createChannelInCategory(categoryChannel, `【${matchId}】WaitingRoom`);
+  vc = await Util.createChannelInCategory(categoryChannel, `【${matchId}】WaitingRoom`, 'voice');
   updDiscordInfo.waiting_voice_ch_id = vc.id;
 
   // Blue Team VoiceChannel
-  vc = await createChannelInCategory(categoryChannel, `【${matchId}】Blue`);
+  vc = await Util.createChannelInCategory(categoryChannel, `【${matchId}】Blue`, 'voice');
   updDiscordInfo.team0_voice_ch_id = vc.id;
 
   // Orange Team VoiceChannel
-  vc = await createChannelInCategory(categoryChannel, `【${matchId}】Orange`);
+  vc = await Util.createChannelInCategory(categoryChannel, `【${matchId}】Orange`, 'voice');
   updDiscordInfo.team1_voice_ch_id = vc.id;
 
   // DBに試合用チャンネル情報を登録
@@ -422,20 +423,6 @@ async function createMatchChannel(guild, match, entryUsersId) {
       match_id: matchId
     }
   });
-}
-
-/**
- * カテゴリにボイスチャンネルを作成する
- * @param {*} categoryChannel
- * @param {*} channelName
- */
-async function createChannelInCategory(categoryChannel, channelName) {
-  const voiceChannel = await categoryChannel.guild.createChannel(channelName, {
-    type: 'voice'
-  });
-  await voiceChannel.setParent(categoryChannel);
-  await voiceChannel.lockPermissions();
-  return voiceChannel;
 }
 
 module.exports = EntryManager;
