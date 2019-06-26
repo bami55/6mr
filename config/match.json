@@ -7,6 +7,7 @@
   },
   "embed_color": {
     "entry": "#008000",
+    "closed": "#36393f",
     "notify": "#f4ca0d"
   },
   "embed_field_title": {

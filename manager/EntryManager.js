@@ -33,7 +33,7 @@ class EntryManager {
     const matchDiscordInfo = await this.getOpenMatchDiscordInfo(data.message_id);
     if (!matchDiscordInfo) return;
 
-    const channel = await client.channels.get(data.channel_id);
+    const channel = client.channels.get(data.channel_id);
     const message = await channel.fetchMessage(data.message_id);
     const match = await db.matches.findOne({
       where: { match_id: matchDiscordInfo.match_id }
@@ -82,6 +82,7 @@ class EntryManager {
     if (remaining <= 0) {
       let new_field_status = new_embed.fields.find(f => f.name === fieldTitle.status);
       new_field_status.value = fieldValue.status.closed;
+      new_embed.color = parseInt(matchConfig.embed_color.closed.replace(/#/gi, ''), 16);
 
       // 試合通知
       notifyMatch(guild, channel, match, embed);
@@ -258,11 +259,12 @@ async function notifyMatch(guild, channel, match, embed) {
   const teamEmbed = new discord.RichEmbed()
     .setColor(matchConfig.embed_color.notify)
     .setTitle(embed.title)
+    .setDescription(matchConfig.notification)
     .addField(fieldTitle.team_blue, blueFieldValue, true)
     .addField(fieldTitle.team_orange, orangeFieldValue, true);
 
   // メンションでエントリーユーザーに通知
-  channel.send(`${matchConfig.notification}`, { embed: teamEmbed });
+  channel.send({ embed: teamEmbed });
 }
 
 /**

@@ -131,6 +131,20 @@ class MatchManager {
       }
     }
 
+    // 募集終了
+    const matchDiscordInfo = await db.match_discord_info.findOne({ where: { match_id: matchId } });
+    const guild = message.guild;
+    const entryChannel = guild.channels.get(tier.entry_ch_id);
+    const entryMessage = await entryChannel.fetchMessage(matchDiscordInfo.message_id);
+    const embed = entryMessage.embeds.shift();
+    const new_embed = new discord.RichEmbed(embed);
+    const fieldTitle = matchConfig.embed_field_title.entry;
+    const fieldValue = matchConfig.embed_field_value.entry;
+    let new_field_status = new_embed.fields.find(f => f.name === fieldTitle.status);
+    new_field_status.value = fieldValue.status.closed;
+    new_embed.color = parseInt(matchConfig.embed_color.closed.replace(/#/gi, ''), 16);
+    entryMessage.edit(new_embed);
+
     // 部屋削除
     deleteMatchChannel(message.guild, matchId);
 
