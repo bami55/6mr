@@ -5,8 +5,11 @@ module.exports = (sequelize, DataTypes) => {
     {
       tier: DataTypes.INTEGER,
       role_id: DataTypes.STRING,
-      max_rate: DataTypes.INTEGER,
+      category_id: DataTypes.STRING,
+      entry_ch_id: DataTypes.STRING,
+      result_ch_id: DataTypes.STRING,
       init_rate: DataTypes.INTEGER,
+      max_rate: DataTypes.INTEGER,
       min_rate: DataTypes.INTEGER
     },
     {

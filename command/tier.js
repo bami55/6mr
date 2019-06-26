@@ -1,6 +1,7 @@
 'use strict';
 
 const db = require(__dirname + '/../database/models/index.js');
+const Util = require(__dirname + '/../util/Util.js');
 
 /**
  * Tier登録コマンド
@@ -66,11 +67,12 @@ async function createOrUpdate(isCreate, message, args) {
  * @param {*} args [0]:Tier, [1]:Tier名, [2]:レート最大値, [3]:レート中央値, [4]:レート最小値
  * @param {*} search
  */
-function setRole(isCreate, message, args, search) {
+async function setRole(isCreate, message, args, search) {
+  const guild = message.guild;
+  const tierId = args[0];
   const tierName = args[1];
   const newTier = {
-    tier: args[0],
-    role_id: null,
+    tier: tierId,
     max_rate: args[2],
     init_rate: args[3],
     min_rate: args[4]
@@ -78,55 +80,51 @@ function setRole(isCreate, message, args, search) {
 
   if (isCreate) {
     // 役職作成
-    message.guild
-      .createRole({
-        name: tierName
-      })
-      .then(role => {
-        message.reply(`${tierName} の役職を作成しました`);
-        newTier.role_id = role.id;
+    const role = await guild.createRole({ name: tierName });
 
-        // DB登録
-        db.tiers
-          .create(newTier)
-          .then(() => {
-            message.reply(`${tierName} を登録しました`);
-          })
-          .catch(error => {
-            console.error(error);
-            message.reply(`${tierName} の登録中にエラーが発生しました`);
-          });
-      })
-      .catch(error => {
-        console.error(error);
-        message.reply(`${tierName} の役職作成中にエラーが発生しました`);
-      });
+    // チャンネル作成
+    const categoryChannel = await guild.createChannel(`${role.name}`, {
+      type: 'category',
+      permissionOverwrites: [
+        {
+          id: guild.id,
+          deny: ['VIEW_CHANNEL']
+        },
+        {
+          id: role.id,
+          allow: ['VIEW_CHANNEL']
+        }
+      ]
+    });
+    const [entryChannel, resultChannel] = await Promise.all([
+      Util.createChannelInCategory(categoryChannel, 'エントリー', 'text'),
+      Util.createChannelInCategory(categoryChannel, '試合結果', 'text')
+    ]);
+
+    // カテゴリチャンネルの並びをTierの位置に移動する
+    categoryChannel.setPosition(tierId);
+
+    // DB登録
+    newTier.role_id = role.id;
+    newTier.category_id = categoryChannel.id;
+    newTier.entry_ch_id = entryChannel.id;
+    newTier.result_ch_id = resultChannel.id;
+    await db.tiers.create(newTier);
+    message.reply(`${tierName} を登録しました`);
   } else {
-    // 役職更新
-    const role = message.guild.roles.get(search.role_id);
-    role
-      .setName(tierName)
-      .then(() => {
-        // DB更新
-        newTier.role_id = role.id;
-        db.tiers
-          .update(newTier, {
-            where: {
-              tier: newTier.tier
-            }
-          })
-          .then(() => {
-            message.reply(`${tierName} を更新しました`);
-          })
-          .catch(error => {
-            console.error(error);
-            message.reply(`${tierName} の更新中にエラーが発生しました`);
-          });
-      })
-      .catch(error => {
-        console.error(error);
-        message.reply(`${tierName} の役職名設定中にエラーが発生しました`);
-      });
+    // 役職名更新
+    const role = guild.roles.get(search.role_id);
+    role.setName(tierName);
+
+    // チャンネル名更新
+    const tier = await db.tiers.findOne({ where: { tier: tierId } });
+    const categoryChannel = guild.channels.get(tier.category_id);
+    categoryChannel.setName(tierName);
+
+    // DB更新
+    newTier.role_id = role.id;
+    await db.tiers.update(newTier, { where: { tier: newTier.tier } });
+    message.reply(`${tierName} を更新しました`);
   }
 }
 
@@ -155,25 +153,15 @@ exports.delete = async (client, message, args) => {
   }
 
   // DB削除
-  const role = message.guild.roles.get(search.role_id);
+  const guild = message.guild;
+  const role = guild.roles.get(search.role_id);
   const tierName = role.name;
-  search
-    .destroy()
-    .then(() => {
-      message.reply(`${tierName} を削除しました`);
+  search.destroy();
 
-      // 役職削除
-      role
-        .delete()
-        .then(() => {
-          message.reply(`${tierName} の役職を削除しました`);
-        })
-        .catch(error => {
-          message.reply(`${tierName} の役職削除中にエラーが発生しました`);
-        });
-    })
-    .catch(error => {
-      console.error(error);
-      message.reply(`${tierName} の削除中にエラーが発生しました`);
-    });
+  // チャンネル削除
+  Util.deleteCategory(guild, search.category_id);
+
+  // 役職削除
+  await role.delete();
+  message.reply(`${tierName} を削除しました`);
 };

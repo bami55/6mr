@@ -11,12 +11,24 @@ module.exports = {
         allowNull: false,
         type: Sequelize.STRING
       },
-      max_rate: {
+      category_id: {
+        allowNull: false,
+        type: Sequelize.STRING
+      },
+      entry_ch_id: {
+        allowNull: false,
+        type: Sequelize.STRING
+      },
+      result_ch_id: {
+        allowNull: false,
+        type: Sequelize.STRING
+      },
+      init_rate: {
         allowNull: false,
         default: 0,
         type: Sequelize.INTEGER
       },
-      init_rate: {
+      max_rate: {
         allowNull: false,
         default: 0,
         type: Sequelize.INTEGER
