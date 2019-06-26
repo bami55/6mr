@@ -29,8 +29,21 @@ class Util {
     const category = guild.channels.get(categoryId);
     if (category) {
       await category.children.forEach(ch => ch.delete());
+      await this.sleep(1000);
       category.delete();
     }
+  }
+
+  /**
+   * スリープ
+   * @param {*} t
+   */
+  static async sleep(t) {
+    return await new Promise(r => {
+      setTimeout(() => {
+        r();
+      }, t);
+    });
   }
 }
 
