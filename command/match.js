@@ -7,6 +7,7 @@ const MatchManager = require(__dirname + '/../manager/MatchManager.js');
  */
 exports.open = (client, message) => {
   MatchManager.openMatch(message);
+  message.delete();
 };
 
 /**
