@@ -15,17 +15,17 @@ class MatchManager {
    * @param {*} message
    */
   static async openMatch(message) {
+    const tier = await db.tiers.findOne({ where: { entry_ch_id: message.channel.id } });
+    if (!tier) {
+      message.reply('エントリーチャンネルで入力してください');
+      return;
+    }
+
     const user = await db.users.findOne({
       where: { discord_id: message.author.id }
     });
     if (!user) {
       message.reply('先にユーザー登録してください');
-      return;
-    }
-
-    const tier = await db.tiers.findOne({ where: { tier: user.tier } });
-    if (!tier) {
-      message.reply('ユーザーのTierが不正です');
       return;
     }
 
@@ -40,6 +40,12 @@ class MatchManager {
    * @param {*} args
    */
   static async report(isWin, message, args) {
+    const tier = await db.tiers.findOne({ where: { result_ch_id: message.channel.id } });
+    if (!tier) {
+      message.reply('試合結果チャンネルで入力してください');
+      return;
+    }
+
     const command = isWin ? '!win' : '!lose';
     const exampleMessage = `${command} 試合ID\n例\n${command} 1024`;
 
@@ -87,6 +93,12 @@ class MatchManager {
    * @param {*} args
    */
   static async cancelMatch(message, args) {
+    const tier = await db.tiers.findOne({ where: { result_ch_id: message.channel.id } });
+    if (!tier) {
+      message.reply('試合結果チャンネルで入力してください');
+      return;
+    }
+
     const command = '!cancel';
     const exampleMessage = `${command} 試合ID\n例\n${command} 1024`;
 
