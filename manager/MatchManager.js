@@ -68,14 +68,7 @@ async function createOpenMatch(channel, tier) {
   // 試合用Discord情報登録
   db.match_discord_info.create({
     match_id: match.match_id,
-    message_id: message.id,
-    category_id: null,
-    waiting_text_ch_id: null,
-    waiting_voice_ch_id: null,
-    team0_text_ch_id: null,
-    team0_voice_ch_id: null,
-    team1_text_ch_id: null,
-    team1_voice_ch_id: null
+    message_id: message.id
   });
 }
 
