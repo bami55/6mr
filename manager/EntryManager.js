@@ -30,7 +30,7 @@ class EntryManager {
     if (!guild) return;
 
     // 募集中の試合用Discord情報取得
-    const matchDiscordInfo = await getOpenMatchDiscordInfo(data.message_id);
+    const matchDiscordInfo = await this.getOpenMatchDiscordInfo(data.message_id);
     if (!matchDiscordInfo) return;
 
     const channel = await client.channels.get(data.channel_id);
@@ -93,27 +93,38 @@ class EntryManager {
     // 募集メッセージ Embed の編集
     message.edit(new_embed);
   }
-}
 
-/**
- * 募集中の試合用Discord情報取得
- * @param {*} message_id
- */
-async function getOpenMatchDiscordInfo(message_id) {
-  const matchDiscoInfo = await db.match_discord_info.findOne({
-    where: {
-      message_id: message_id
-    },
-    raw: true,
-    include: [
-      {
-        model: db.matches,
-        required: true,
-        where: { status: matchConfig.status.open }
+  /**
+   * 試合にエントリーしている全ユーザー取得
+   * @param {*} matchId
+   */
+  static async getEntryUsers(matchId) {
+    return await db.match_users.findAll({
+      where: {
+        match_id: matchId
       }
-    ]
-  });
-  return matchDiscoInfo;
+    });
+  }
+
+  /**
+   * 募集中の試合用Discord情報取得
+   * @param {*} message_id
+   */
+  static async getOpenMatchDiscordInfo(message_id) {
+    return await db.match_discord_info.findOne({
+      where: {
+        message_id: message_id
+      },
+      raw: true,
+      include: [
+        {
+          model: db.matches,
+          required: true,
+          where: { status: matchConfig.status.open }
+        }
+      ]
+    });
+  }
 }
 
 /**

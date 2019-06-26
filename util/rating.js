@@ -1,9 +1,11 @@
-"use strict";
+'use strict';
 
-const matchConfig = require(__dirname + "/../config/match.json");
-const db = require(__dirname + "/../database/models/index.js");
-const Sequelize = require("sequelize");
+const matchConfig = require(__dirname + '/../config/match.json');
+const db = require(__dirname + '/../database/models/index.js');
+const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
+
+const EntryManager = require(__dirname + '/../manager/EntryManager.js');
 
 exports.updateRating = async (guild, matchId) => {
   // 試合結果取得
@@ -15,11 +17,7 @@ exports.updateRating = async (guild, matchId) => {
   if (!result) return;
 
   // エントリー全ユーザー取得
-  const users = await db.match_users.findAll({
-    where: {
-      match_id: matchId
-    }
-  });
+  const users = EntryManager.getEntryUsers(matchId);
   if (!users) return;
 
   // 報告用ユーザー取得
@@ -69,12 +67,7 @@ async function updateUser(guild, result, user) {
     updUser = calcRating(isWin, updUser);
 
     // Tierチェンジ
-    let resultChangeTier = await changeTier(
-      guildMember,
-      userInfo,
-      updUser,
-      reportResult
-    );
+    let resultChangeTier = await changeTier(guildMember, userInfo, updUser, reportResult);
     updUser = resultChangeTier.updUser;
     reportResult = resultChangeTier.reportResult;
 
