@@ -181,20 +181,16 @@ async function entryEnabled(channel, user, match_id, match_tier) {
  */
 async function getReactionUsers(guild, reaction) {
   let entryUsers = {
-    user: [],
     id: [],
-    name: [],
-    mention: []
+    name: []
   };
 
   if (reaction) {
     const reactionUsers = await reaction.fetchUsers();
     reactionUsers.forEach(user => {
       if (!user.bot) {
-        entryUsers.user.push(user);
         entryUsers.id.push(user.id);
         entryUsers.name.push(guild.member(user).displayName);
-        entryUsers.mention.push(`<@${user.id}>`);
       }
     });
   }
