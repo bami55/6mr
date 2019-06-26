@@ -3,6 +3,7 @@
 const matchConfig = require(__dirname + '/../config/match.json');
 const db = require(__dirname + '/../database/models/index.js');
 const rating = require(__dirname + '/../util/rating.js');
+const Util = require(__dirname + '/../util/util.js');
 const discord = require('discord.js');
 
 class MatchManager {
@@ -76,7 +77,7 @@ class MatchManager {
     }
 
     // DB登録
-    saveResult(isWin, findMatch, findMatchUser);
+    await saveResult(isWin, findMatch, findMatchUser);
 
     // レーティング更新
     rating.updateRating(message.guild, matchId);
@@ -211,13 +212,7 @@ async function deleteMatchChannel(guild, matchId) {
   const matchDiscordInfo = await db.match_discord_info.findOne({
     where: { match_id: matchId }
   });
-  if (matchDiscordInfo) {
-    const category = guild.channels.find(c => c.id === matchDiscordInfo.category_id);
-    if (category) {
-      await category.children.forEach(async ch => await ch.delete());
-      category.delete();
-    }
-  }
+  if (matchDiscordInfo) Util.deleteCategory(guild, matchDiscordInfo.category_id);
 }
 
 /**
