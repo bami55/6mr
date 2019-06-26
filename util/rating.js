@@ -17,7 +17,7 @@ exports.updateRating = async (guild, matchId) => {
   if (!result) return;
 
   // エントリー全ユーザー取得
-  const users = EntryManager.getEntryUsers(matchId);
+  const users = await EntryManager.getEntryUsers(matchId);
   if (!users) return;
 
   // 報告用ユーザー取得
@@ -96,7 +96,7 @@ async function updateUser(guild, result, user) {
  */
 function calcRating(isWin, updUser) {
   if (isWin) {
-    updUser.rate += matchConfig.rate.win;
+    updUser.rate += matchConfig.rate.win + updUser.streak * matchConfig.rate.streak;
     updUser.win += 1;
     updUser.streak += 1;
   } else {
