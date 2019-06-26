@@ -1,6 +1,5 @@
 'use strict';
 
-require('dotenv').config();
 const matchConfig = require(__dirname + '/../config/match.json');
 const db = require(__dirname + '/../database/models/index.js');
 const rating = require(__dirname + '/../util/rating.js');
