@@ -6,11 +6,8 @@ module.exports = (sequelize, DataTypes) => {
       match_id: DataTypes.INTEGER,
       message_id: DataTypes.STRING,
       category_id: DataTypes.STRING,
-      waiting_text_ch_id: DataTypes.STRING,
       waiting_voice_ch_id: DataTypes.STRING,
-      team0_text_ch_id: DataTypes.STRING,
       team0_voice_ch_id: DataTypes.STRING,
-      team1_text_ch_id: DataTypes.STRING,
       team1_voice_ch_id: DataTypes.STRING
     },
     {

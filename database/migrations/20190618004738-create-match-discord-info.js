@@ -13,19 +13,10 @@ module.exports = {
       category_id: {
         type: Sequelize.STRING
       },
-      waiting_text_ch_id: {
-        type: Sequelize.STRING
-      },
       waiting_voice_ch_id: {
         type: Sequelize.STRING
       },
-      team0_text_ch_id: {
-        type: Sequelize.STRING
-      },
       team0_voice_ch_id: {
-        type: Sequelize.STRING
-      },
-      team1_text_ch_id: {
         type: Sequelize.STRING
       },
       team1_voice_ch_id: {
