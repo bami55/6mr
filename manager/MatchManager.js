@@ -3,7 +3,7 @@
 const matchConfig = require(__dirname + '/../config/match.json');
 const db = require(__dirname + '/../database/models/index.js');
 const rating = require(__dirname + '/../util/rating.js');
-const Util = require(__dirname + '/../util/util.js');
+const Util = require(__dirname + '/../util/Util.js');
 const discord = require('discord.js');
 
 class MatchManager {
