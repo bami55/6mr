@@ -6,7 +6,9 @@
     "sqlite3": "^4.0.8"
   },
   "scripts": {
-    "start": "node bot.js",
+    "start": "forever start bot.js",
+    "restart": "forever restart bot.js",
+    "stop": "forever stop bot.js",
     "sequelize": "node_modules\\.bin\\sequelize"
   },
   "dependencies": {
