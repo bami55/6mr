@@ -1,6 +1,6 @@
-"use strict";
+'use strict';
 
-const db = require(__dirname + "/../database/models/index.js");
+const db = require(__dirname + '/../database/models/index.js');
 
 /**
  * ユーザー登録
@@ -10,18 +10,18 @@ exports.create = async (client, message, commandArgs) => {
     where: { discord_id: message.author.id }
   });
   if (search) {
-    message.reply("すでに登録済みです");
+    message.reply('すでに登録済みです');
     return;
   }
 
   if (!commandArgs || commandArgs.length === 0) {
-    message.reply("Tierを指定してください");
+    message.reply('Tierを指定してください');
     return;
   }
 
   const tier = await db.tiers.findOne({ where: { tier: commandArgs[0] } });
   if (!tier) {
-    message.reply("正しいTierを指定してください");
+    message.reply('正しいTierを指定してください');
     return;
   }
 
@@ -38,11 +38,11 @@ exports.create = async (client, message, commandArgs) => {
     .then(async () => {
       // 役職付与
       await message.member.addRole(tier.role_id);
-      message.reply("登録しました");
+      message.reply('登録しました');
     })
     .catch(error => {
       console.error(error);
-      message.reply("エラーが発生しました");
+      message.reply('エラーが発生しました');
     });
 };
 
@@ -50,27 +50,23 @@ exports.create = async (client, message, commandArgs) => {
  * ユーザー更新
  */
 exports.update = async (client, message) => {
-  if (!message.member.hasPermission("ADMINISTRATOR")) {
-    message.reply("管理者権限が必要です");
+  if (!message.member.hasPermission('ADMINISTRATOR')) {
+    message.reply('管理者権限が必要です');
     return;
   }
 
-  const paramsTitle = "!tier_set メンション tierの数字";
-  const example = "!tier_set 2";
+  const paramsTitle = '!tier_set メンション tierの数字';
+  const example = '!tier_set 2';
   const exampleMessage = `${paramsTitle}\n例\n${example}`;
 
   const mentionMembers = message.mentions.members;
   if (!mentionMembers) {
-    message.reply(
-      `更新するユーザーのメンションをつけてください\n${exampleMessage}`
-    );
+    message.reply(`更新するユーザーのメンションをつけてください\n${exampleMessage}`);
     return;
   }
 
   if (mentionMembers.length > 1) {
-    message.reply(
-      `更新できるユーザーは１回につき１人までです\n${exampleMessage}`
-    );
+    message.reply(`更新できるユーザーは１回につき１人までです\n${exampleMessage}`);
     return;
   }
 
@@ -81,7 +77,7 @@ exports.update = async (client, message) => {
 
   const tier = await db.tiers.findOne({ where: { tier: commandArgs[1] } });
   if (!tier) {
-    message.reply("正しいTierを指定してください");
+    message.reply('正しいTierを指定してください');
     return;
   }
 
@@ -123,14 +119,14 @@ exports.update = async (client, message) => {
  * ユーザー削除
  */
 exports.delete = async (client, message) => {
-  if (!message.member.hasPermission("ADMINISTRATOR")) {
-    message.reply("管理者権限が必要です");
+  if (!message.member.hasPermission('ADMINISTRATOR')) {
+    message.reply('管理者権限が必要です');
     return;
   }
 
   const mentionMembers = message.mentions.members;
   if (!mentionMembers) {
-    message.reply("削除するユーザーのメンションをつけてください");
+    message.reply('削除するユーザーのメンションをつけてください');
     return;
   }
 

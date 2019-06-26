@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = (sequelize, DataTypes) => {
   const match_results = sequelize.define(
-    "match_results",
+    'match_results',
     {
       match_id: DataTypes.INTEGER,
       win_team: DataTypes.INTEGER,
@@ -14,6 +14,6 @@ module.exports = (sequelize, DataTypes) => {
   match_results.associate = function(models) {
     // associations can be defined here
   };
-  match_results.removeAttribute("id");
+  match_results.removeAttribute('id');
   return match_results;
 };

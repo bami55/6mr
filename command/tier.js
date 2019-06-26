@@ -1,6 +1,6 @@
-"use strict";
+'use strict';
 
-const db = require(__dirname + "/../database/models/index.js");
+const db = require(__dirname + '/../database/models/index.js');
 
 /**
  * Tier登録コマンド
@@ -23,13 +23,13 @@ exports.update = (client, message, args) => {
  * @param {*} args
  */
 async function createOrUpdate(isCreate, message, args) {
-  const cmd = isCreate ? "add" : "update";
+  const cmd = isCreate ? 'add' : 'update';
   const paramsTitle = `!tier_${cmd} tierの数字 Tier名 レート最大値 レート中央値 レート最小値`;
   const example = `!tier_${cmd} 2 Tier2 5000 4000 3000`;
   const exampleMessage = `${paramsTitle}\n例\n${example}`;
 
-  if (!message.member.hasPermission("ADMINISTRATOR")) {
-    message.reply("管理者権限が必要です");
+  if (!message.member.hasPermission('ADMINISTRATOR')) {
+    message.reply('管理者権限が必要です');
     return;
   }
 
@@ -134,13 +134,13 @@ function setRole(isCreate, message, args, search) {
  * Tier削除コマンド
  */
 exports.delete = async (client, message, args) => {
-  if (!message.member.hasPermission("ADMINISTRATOR")) {
-    message.reply("管理者権限が必要です");
+  if (!message.member.hasPermission('ADMINISTRATOR')) {
+    message.reply('管理者権限が必要です');
     return;
   }
 
-  const paramsTitle = "!tier_delete tierの数字";
-  const example = "!tier_delete 2";
+  const paramsTitle = '!tier_delete tierの数字';
+  const example = '!tier_delete 2';
   const exampleMessage = `${paramsTitle}\n例\n${example}`;
 
   if (!args || args.length === 0) {

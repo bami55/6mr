@@ -1,9 +1,9 @@
-"use strict";
+'use strict';
 
-require("dotenv").config();
-const user = require("./user");
-const tier = require("./tier");
-const match = require("./match");
+require('dotenv').config();
+const user = require('./user');
+const tier = require('./tier');
+const match = require('./match');
 
 exports.base = (client, message) => {
   const prefix = process.env.PREFIX;
@@ -17,35 +17,35 @@ exports.base = (client, message) => {
 
   switch (command) {
     // User
-    case "signup":
+    case 'signup':
       user.create(client, message, args);
       break;
-    case "delete":
+    case 'delete':
       user.delete(client, message);
       break;
 
     // Tier
-    case "tier_add":
+    case 'tier_add':
       tier.create(client, message, args);
       break;
-    case "tier_update":
+    case 'tier_update':
       tier.update(client, message, args);
       break;
-    case "tier_delete":
+    case 'tier_delete':
       tier.delete(client, message, args);
       break;
 
     // Match
-    case "open":
+    case 'open':
       match.open(client, message);
       break;
-    case "win":
+    case 'win':
       match.reportWin(client, message, args);
       break;
-    case "lose":
+    case 'lose':
       match.reportLose(client, message, args);
       break;
-    case "cancel":
+    case 'cancel':
       match.cancel(client, message, args);
       break;
 

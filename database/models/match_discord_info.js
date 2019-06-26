@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = (sequelize, DataTypes) => {
   const match_discord_info = sequelize.define(
-    "match_discord_info",
+    'match_discord_info',
     {
       match_id: DataTypes.INTEGER,
       message_id: DataTypes.STRING,
@@ -20,10 +20,10 @@ module.exports = (sequelize, DataTypes) => {
   match_discord_info.associate = function(models) {
     // associations can be defined here
     match_discord_info.belongsTo(models.matches, {
-      foreignKey: "match_id",
-      targetKey: "match_id"
+      foreignKey: 'match_id',
+      targetKey: 'match_id'
     });
   };
-  match_discord_info.removeAttribute("id");
+  match_discord_info.removeAttribute('id');
   return match_discord_info;
 };

@@ -1,22 +1,22 @@
-"use strict";
+'use strict';
 
-require("dotenv").config();
-const discord = require("discord.js");
+require('dotenv').config();
+const discord = require('discord.js');
 const client = new discord.Client();
 
-const baseCommand = require("./command/base");
-const baseEvent = require("./event/base");
+const baseCommand = require('./command/base');
+const baseEvent = require('./event/base');
 
-client.on("ready", message => {
-  console.log("bot is ready!");
+client.on('ready', message => {
+  console.log('bot is ready!');
 });
 
-client.on("raw", event => {
+client.on('raw', event => {
   if (!baseEvent.events.hasOwnProperty(event.t)) return;
   baseEvent.base(client, event);
 });
 
-client.on("message", message => {
+client.on('message', message => {
   baseCommand.base(client, message);
 });
 

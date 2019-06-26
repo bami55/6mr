@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = (sequelize, DataTypes) => {
   const tiers = sequelize.define(
-    "tiers",
+    'tiers',
     {
       tier: DataTypes.INTEGER,
       role_id: DataTypes.STRING,
@@ -16,6 +16,6 @@ module.exports = (sequelize, DataTypes) => {
   tiers.associate = function(models) {
     // associations can be defined here
   };
-  tiers.removeAttribute("id");
+  tiers.removeAttribute('id');
   return tiers;
 };
