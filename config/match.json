@@ -5,16 +5,34 @@
     "closed": 2,
     "cancel": 9
   },
-  "embed_field": {
-    "remaining": "残",
-    "status": "ステータス",
-    "entry": "エントリー",
-    "team_blue": "Blue",
-    "team_orange": "Orange"
+  "embed_color": {
+    "entry": "#008000",
+    "notify": "#f4ca0d"
   },
-  "embed_status": {
-    "open": "募集中",
-    "closed": "募集は終了しました"
+  "embed_field_title": {
+    "entry": {
+      "remaining": "残",
+      "status": "ステータス",
+      "entry": "エントリー"
+    },
+    "match": {
+      "team_blue": "Blue",
+      "team_orange": "Orange"
+    }
+  },
+  "embed_field_value": {
+    "entry": {
+      "remaining": {
+        "entry_size": 1
+      },
+      "status": {
+        "open": "募集中",
+        "closed": "募集は終了しました"
+      },
+      "entry": {
+        "entry_none": "なし"
+      }
+    }
   },
   "rate": {
     "win": 15,
@@ -24,8 +42,6 @@
     "blue": 0,
     "orange": 1
   },
-  "entry_none": "なし",
-  "entry_size": 2,
   "notification": "揃いましたので入室してください。",
   "reaction_emoji": "✅"
 }

@@ -61,25 +61,27 @@ class EntryManager {
     if (!embed) return;
 
     const new_embed = new discord.RichEmbed(embed);
+    const fieldTitle = matchConfig.embed_field_title.entry;
+    const fieldValue = matchConfig.embed_field_value.entry;
 
     // Embed Field エントリー一覧
-    let field_entry = new_embed.fields.find(f => f.name === matchConfig.embed_field.entry);
+    let field_entry = new_embed.fields.find(f => f.name === fieldTitle.entry);
     if (entryUsers.name.length === 0) {
-      field_entry.value = matchConfig.entry_none;
+      field_entry.value = fieldValue.entry.entry_none;
     } else {
       field_entry.value = entryUsers.name.join('\n');
     }
 
     // Embed Field 残り人数
-    const entrySize = matchConfig.entry_size;
+    const entrySize = fieldValue.remaining.entry_size;
     const remaining = entrySize - entryUsers.name.length;
-    let field_remaining = new_embed.fields.find(f => f.name === matchConfig.embed_field.remaining);
+    let field_remaining = new_embed.fields.find(f => f.name === fieldTitle.remaining);
     field_remaining.value = remaining;
 
     // 募集人数に達した場合
     if (remaining <= 0) {
-      let new_field_status = new_embed.fields.find(f => f.name === matchConfig.embed_field.status);
-      new_field_status.value = matchConfig.embed_status.closed;
+      let new_field_status = new_embed.fields.find(f => f.name === fieldTitle.status);
+      new_field_status.value = fieldValue.status.closed;
 
       // 試合通知
       notifyMatch(guild, channel, match, embed);
@@ -250,13 +252,14 @@ async function notifyMatch(guild, channel, match, embed) {
   const teams = await chooseUpTeam(match.match_id);
   const blueFieldValue = getTeamPlayerFieldValue(guild, teams.blue);
   const orangeFieldValue = getTeamPlayerFieldValue(guild, teams.orange);
+  const fieldTitle = matchConfig.embed_field_title.match;
 
   // 試合情報、チーム情報のEmbedを作成
   const teamEmbed = new discord.RichEmbed()
-    .setColor('#0099ff')
+    .setColor(matchConfig.embed_color.notify)
     .setTitle(embed.title)
-    .addField(matchConfig.embed_field.team_blue, blueFieldValue, true)
-    .addField(matchConfig.embed_field.team_orange, orangeFieldValue, true);
+    .addField(fieldTitle.team_blue, blueFieldValue, true)
+    .addField(fieldTitle.team_orange, orangeFieldValue, true);
 
   // メンションでエントリーユーザーに通知
   channel.send(`${matchConfig.notification}`, { embed: teamEmbed });

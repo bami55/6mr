@@ -50,12 +50,14 @@ async function createOpenMatch(channel, tier) {
 
   // 募集メッセージ作成
   const role = channel.guild.roles.get(tier.role_id);
+  const fieldTitle = matchConfig.embed_field_title.entry;
+  const fieldValue = matchConfig.embed_field_value.entry;
   const embed = new discord.RichEmbed()
-    .setColor('#0099ff')
+    .setColor(matchConfig.embed_color.entry)
     .setTitle(`${role.name}【${match.match_id}】`)
-    .addField(matchConfig.embed_field.status, matchConfig.embed_status.open, true)
-    .addField(matchConfig.embed_field.remaining, matchConfig.entry_size, true)
-    .addField(matchConfig.embed_field.entry, matchConfig.entry_none);
+    .addField(fieldTitle.status, fieldValue.status.open, true)
+    .addField(fieldTitle.remaining, fieldValue.remaining.entry_size, true)
+    .addField(fieldTitle.entry, fieldValue.entry.entry_none);
 
   // 募集メッセージ送信
   const message = await channel.send(embed);
