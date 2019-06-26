@@ -2,6 +2,7 @@
 
 const matchConfig = require(__dirname + '/../config/match.json');
 const db = require(__dirname + '/../database/models/index.js');
+const discord = require('discord.js');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 
@@ -29,6 +30,14 @@ exports.updateRating = async (guild, matchId) => {
   }
 
   // TODO: 特定のチャンネルに試合結果、レート変動を出力する
+  const channel = guild.channels.get('593408395248402461');
+  const embed = new discord.RichEmbed()
+    .setColor(matchConfig.embed_color.entry)
+    .setTitle(`試合結果【${matchId}】`);
+  reportUsers.forEach(user => {
+    embed.addField(user.name, `${user.tier} : ${user.rate}`, true);
+  });
+  channel.send(embed);
 };
 
 /**
