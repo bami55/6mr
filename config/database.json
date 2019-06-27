@@ -6,7 +6,7 @@
     "host": "127.0.0.1",
     "logging": false,
     "dialect": "sqlite",
-    "storage": "./database/6men.sqlite3"
+    "storage": "./database/6men_dev.sqlite3"
   },
   "test": {
     "username": "root",
