@@ -143,7 +143,7 @@ class MatchManager {
     const fieldValue = matchConfig.embed_field_value.entry;
     let new_field_status = new_embed.fields.find(f => f.name === fieldTitle.status);
     new_field_status.value = fieldValue.status.closed;
-    new_embed.color = parseInt(matchConfig.embed_color.closed.replace(/#/gi, ''), 16);
+    new_embed.color = Util.convertColorInt(matchConfig.embed_color.closed);
     entryMessage.edit(new_embed);
 
     // 部屋削除
