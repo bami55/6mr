@@ -29,15 +29,8 @@ exports.updateRating = async (guild, matchId) => {
     reportUsers.push(reportUser);
   }
 
-  // TODO: 特定のチャンネルに試合結果、レート変動を出力する
-  const channel = guild.channels.get('593408395248402461');
-  const embed = new discord.RichEmbed()
-    .setColor(matchConfig.embed_color.entry)
-    .setTitle(`試合結果【${matchId}】`);
-  reportUsers.forEach(user => {
-    embed.addField(user.name, `${user.tier} : ${user.rate}`, true);
-  });
-  channel.send(embed);
+  // 試合結果出力
+  outputMatchResult(guild, result, reportUsers);
 };
 
 /**
@@ -54,11 +47,11 @@ async function updateUser(guild, result, user) {
 
   // 結果出力用
   let reportResult = {
-    name: null,
+    team: user.team,
+    mention: `<@${user.discord_id}>`,
     rate: null,
     tier: null
   };
-  reportResult.name = guildMember.displayName;
 
   let updUser = {
     discord_id: userInfo.discord_id,
@@ -73,7 +66,8 @@ async function updateUser(guild, result, user) {
 
   if (userInfo) {
     // レート計算
-    updUser = calcRating(isWin, updUser);
+    const [calcUser, changeRate] = calcRating(isWin, updUser);
+    updUser = calcUser;
 
     // Tierチェンジ
     let resultChangeTier = await changeTier(guildMember, userInfo, updUser, reportResult);
@@ -88,9 +82,9 @@ async function updateUser(guild, result, user) {
 
     // レート変動出力
     if (isWin) {
-      reportResult.rate = `${updUser.rate} (+${matchConfig.rate.win})`;
+      reportResult.rate = `${updUser.rate} (+${changeRate})`;
     } else {
-      reportResult.rate = `${updUser.rate} (-${matchConfig.rate.lose})`;
+      reportResult.rate = `${updUser.rate} (-${changeRate})`;
     }
   }
 
@@ -104,16 +98,19 @@ async function updateUser(guild, result, user) {
  * @param {*} updUser
  */
 function calcRating(isWin, updUser) {
+  let changeRate = 0;
   if (isWin) {
-    updUser.rate += matchConfig.rate.win + updUser.streak * matchConfig.rate.streak;
+    changeRate = matchConfig.rate.win + updUser.streak * matchConfig.rate.streak;
+    updUser.rate += changeRate;
     updUser.win += 1;
     updUser.streak += 1;
   } else {
-    updUser.rate -= matchConfig.rate.lose;
+    changeRate = matchConfig.rate.lose;
+    updUser.rate -= changeRate;
     updUser.lose += 1;
     updUser.streak = 0;
   }
-  return updUser;
+  return [updUser, changeRate];
 }
 
 /**
@@ -136,9 +133,12 @@ async function changeTier(guildMember, userInfo, updUser, reportResult) {
     // Tier変更
     updUser.tier = newTier.tier;
     updUser.rate = newTier.init_rate;
+    updUser.streak = 0;
     await guildMember.removeRole(oldTierRole);
     await guildMember.addRole(newTierRole);
-    reportResult.tier = `${oldTierRole.name} -> ${newTierRole.name}`;
+    const updownEmoji =
+      userInfo.rate < updUser.rate ? matchConfig.updown_emoji.up : matchConfig.updown_emoji.down;
+    reportResult.tier = `${newTierRole.name} ${updownEmoji}`;
   } else {
     // Tier維持
     reportResult.tier = oldTierRole.name;
@@ -165,4 +165,50 @@ async function getTierByRate(rate) {
     }
   });
   return tier;
+}
+
+/**
+ * 特定のチャンネルに試合結果、レート変動を出力する
+ * @param {*} guild
+ * @param {*} result
+ */
+function outputMatchResult(guild, result, reportUsers) {
+  const matchId = result.match_id;
+  const matchFieldTitle = matchConfig.embed_field_title.match;
+  let teamName = {
+    blue: matchFieldTitle.team_blue,
+    orange: matchFieldTitle.team_orange
+  };
+  let color = 0;
+
+  if (result.win_team === matchConfig.team.blue) {
+    color = matchConfig.embed_color.blue;
+    teamName.blue = `${matchConfig.winner_emoji} ${teamName.blue}`;
+  } else {
+    color = matchConfig.embed_color.orange;
+    teamName.orange = `${matchConfig.winner_emoji} ${teamName.orange}`;
+  }
+
+  const embed = new discord.RichEmbed().setColor(color).setTitle(`試合結果【${matchId}】`);
+  const outputs = [
+    {
+      team: teamName.blue,
+      user: reportUsers.filter(f => f.team === matchConfig.team.blue)
+    },
+    {
+      team: teamName.orange,
+      user: reportUsers.filter(f => f.team === matchConfig.team.orange)
+    }
+  ];
+  outputs.forEach(op => {
+    let players = [];
+    op.user.forEach(user => {
+      players.push(`${user.mention}\n${user.tier}\n${user.rate}`);
+    });
+    if (players.length === 0) players.push('-');
+    embed.addField(op.team, `${players.join('\n\n')}`, true);
+  });
+
+  const channel = guild.channels.get('593339192055038001');
+  channel.send(embed);
 }
