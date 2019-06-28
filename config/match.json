@@ -6,9 +6,9 @@
     "cancel": 9
   },
   "embed_color": {
-    "entry": "#008000",
+    "entry": "#80ff00",
     "closed": "#36393f",
-    "notify": "#f4ca0d",
+    "notify": "#ff00ff",
     "blue": "#3762e7",
     "orange": "#ff7e29"
   },
