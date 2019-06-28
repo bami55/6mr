@@ -347,9 +347,8 @@ function getTeamPlayerFieldValue(guild, players) {
 /**
  * 試合ステータス変更
  * @param {*} match
- * @param {*} entryUsersId
  */
-async function changeMatchStatus(match, entryUsersId) {
+async function changeMatchStatus(match) {
   // ステータス更新
   let updMatch = {
     match_id: match.match_id,
