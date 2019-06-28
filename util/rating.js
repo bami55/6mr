@@ -172,7 +172,7 @@ async function getTierByRate(rate) {
  * @param {*} guild
  * @param {*} result
  */
-function outputMatchResult(guild, result, reportUsers) {
+async function outputMatchResult(guild, result, reportUsers) {
   const matchId = result.match_id;
   const matchFieldTitle = matchConfig.embed_field_title.match;
   let teamName = {
@@ -209,6 +209,8 @@ function outputMatchResult(guild, result, reportUsers) {
     embed.addField(op.team, `${players.join('\n\n')}`, true);
   });
 
-  const channel = guild.channels.get('593339192055038001');
+  const match = await db.matches.findOne({ where: { match_id: matchId } });
+  const tier = await db.tiers.findOne({ where: { tier: match.match_tier } });
+  const channel = guild.channels.get(tier.result_ch_id);
   channel.send(embed);
 }

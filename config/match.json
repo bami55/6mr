@@ -49,8 +49,8 @@
   "notification": "揃いましたので入室してください。",
   "reaction_emoji": "✅",
   "updown_emoji": {
-    "up": "⤴️",
-    "down": "⤵️"
+    "up": ":arrow_heading_up:",
+    "down": ":arrow_heading_down:"
   },
-  "winner_emoji": "💮"
+  "winner_emoji": "🏆"
 }
