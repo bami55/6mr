@@ -84,17 +84,14 @@ class EntryManager {
       new_field_status.value = fieldValue.status.closed;
       new_embed.color = parseInt(matchConfig.embed_color.closed.replace(/#/gi, ''), 16);
 
-      // チーム分け
-      const teams = await chooseUpTeam(match.match_id);
-
       // 試合ステータス変更
-      changeMatchStatus(match, entryUsers.id);
-
-      // 部屋作成
-      await createMatchChannel(guild, match, entryUsers.id);
+      changeMatchStatus(match);
 
       // 試合通知
-      notifyMatch(channel, match.match_id, teams, embed);
+      const notifyMessage = await notifyMatch(channel, match.match_id, embed);
+
+      // 部屋作成
+      createMatchChannel(guild, match, entryUsers.id, notifyMessage);
     }
     // 募集メッセージ Embed の編集
     message.edit(new_embed);
@@ -248,32 +245,26 @@ async function updateMatchUsers(matchId, entryUserIds) {
  * 試合を通知する
  * @param {*} channel
  * @param {*} matchId
- * @param {*} teams
  * @param {*} embed
  */
-async function notifyMatch(channel, matchId, teams, embed) {
+async function notifyMatch(channel, matchId, embed) {
+  // チーム分け
+  const teams = await chooseUpTeam(matchId);
   const guild = channel.guild;
   const blueFieldValue = getTeamPlayerFieldValue(guild, teams.blue);
   const orangeFieldValue = getTeamPlayerFieldValue(guild, teams.orange);
   const fieldTitle = matchConfig.embed_field_title.match;
 
-  // Waiting Room へのリンク生成
-  const matchDiscordInfo = await db.match_discord_info.findOne({ where: { match_id: matchId } });
-  const waitingVoiceChannel = guild.channels.get(matchDiscordInfo.waiting_voice_ch_id);
-  const vcInvite = await waitingVoiceChannel.createInvite({ maxAge: 0 });
-  const vcInviteUrl = vcInvite.url;
-
   // 試合情報、チーム情報のEmbedを作成
   const teamEmbed = new discord.RichEmbed()
     .setColor(matchConfig.embed_color.notify)
     .setTitle(embed.title)
-    .setURL(vcInviteUrl)
     .setDescription(matchConfig.notification)
     .addField(fieldTitle.team_blue, blueFieldValue, true)
     .addField(fieldTitle.team_orange, orangeFieldValue, true);
 
   // メンションでエントリーユーザーに通知
-  channel.send({ embed: teamEmbed });
+  return await channel.send({ embed: teamEmbed });
 }
 
 /**
@@ -364,7 +355,7 @@ async function changeMatchStatus(match) {
     match_tier: match.tier,
     status: matchConfig.status.in_progress
   };
-  await db.matches.update(updMatch, {
+  db.matches.update(updMatch, {
     where: {
       match_id: match.match_id
     }
@@ -376,8 +367,9 @@ async function changeMatchStatus(match) {
  * @param {*} guild
  * @param {*} match
  * @param {*} entryUsersId
+ * @param {*} notifyMessage
  */
-async function createMatchChannel(guild, match, entryUsersId) {
+async function createMatchChannel(guild, match, entryUsersId, notifyMessage) {
   const matchId = match.match_id;
   const tier = await db.tiers.findOne({ where: { tier: match.match_tier } });
 
@@ -415,8 +407,12 @@ async function createMatchChannel(guild, match, entryUsersId) {
   let vc = null;
 
   // Waiting Room VoiceChannel
-  vc = await Util.createChannelInCategory(categoryChannel, `【${matchId}】WaitingRoom`, 'voice');
-  updDiscordInfo.waiting_voice_ch_id = vc.id;
+  let waitingVc = await Util.createChannelInCategory(
+    categoryChannel,
+    `【${matchId}】WaitingRoom`,
+    'voice'
+  );
+  updDiscordInfo.waiting_voice_ch_id = waitingVc.id;
 
   // Blue Team VoiceChannel
   vc = await Util.createChannelInCategory(categoryChannel, `【${matchId}】Blue`, 'voice');
@@ -432,6 +428,16 @@ async function createMatchChannel(guild, match, entryUsersId) {
       match_id: matchId
     }
   });
+
+  const embed = notifyMessage.embeds.shift();
+  if (!embed) return;
+
+  // Waiting Room へのリンク生成
+  const vcInvite = await waitingVc.createInvite({ maxAge: 0 });
+  const vcInviteUrl = vcInvite.url;
+  const new_embed = new discord.RichEmbed(embed).setURL(vcInviteUrl);
+  new_embed.setURL(vcInviteUrl);
+  notifyMessage.edit(new_embed);
 }
 
 module.exports = EntryManager;
