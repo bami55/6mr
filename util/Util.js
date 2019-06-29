@@ -45,6 +45,14 @@ class Util {
       }, t);
     });
   }
+
+  /**
+   * Color Hex を Int に変換
+   * @param {*} color
+   */
+  static convertColorInt(color) {
+    return parseInt(color.replace(/#/gi, ''), 16);
+  }
 }
 
 module.exports = Util;

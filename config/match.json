@@ -6,9 +6,11 @@
     "cancel": 9
   },
   "embed_color": {
-    "entry": "#008000",
+    "entry": "#80ff00",
     "closed": "#36393f",
-    "notify": "#f4ca0d"
+    "notify": "#ff00ff",
+    "blue": "#3762e7",
+    "orange": "#ff7e29"
   },
   "embed_field_title": {
     "entry": {
@@ -17,14 +19,14 @@
       "entry": "エントリー"
     },
     "match": {
-      "team_blue": "Blue",
-      "team_orange": "Orange"
+      "team_blue": "BLUE",
+      "team_orange": "ORANGE"
     }
   },
   "embed_field_value": {
     "entry": {
       "remaining": {
-        "entry_size": 6
+        "entry_size": 1
       },
       "status": {
         "open": "募集中",
@@ -45,5 +47,10 @@
     "orange": 1
   },
   "notification": "揃いましたので入室してください。",
-  "reaction_emoji": "✅"
+  "reaction_emoji": "✅",
+  "updown_emoji": {
+    "up": ":arrow_heading_up:",
+    "down": ":arrow_heading_down:"
+  },
+  "winner_emoji": "🏆"
 }
