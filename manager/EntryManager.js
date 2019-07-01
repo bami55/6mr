@@ -435,8 +435,8 @@ async function createMatchChannel(guild, match, entryUsersId, notifyMessage) {
   // Waiting Room へのリンク生成
   const vcInvite = await waitingVc.createInvite({ maxAge: 0 });
   const vcInviteUrl = vcInvite.url;
-  const new_embed = new discord.RichEmbed(embed).setURL(vcInviteUrl);
-  new_embed.setURL(vcInviteUrl);
+  const new_embed = new discord.RichEmbed(embed);
+  new_embed.setDescription(embed.description + `\n<${vcInviteUrl}>`);
   notifyMessage.edit(new_embed);
 }
 
