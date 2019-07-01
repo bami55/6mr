@@ -49,14 +49,14 @@ exports.create = async (client, message, commandArgs) => {
 /**
  * ユーザー更新
  */
-exports.update = async (client, message) => {
+exports.update = async (client, message, commandArgs) => {
   if (!message.member.hasPermission('ADMINISTRATOR')) {
     message.reply('管理者権限が必要です');
     return;
   }
 
-  const paramsTitle = '!tier_set メンション tierの数字';
-  const example = '!tier_set 2';
+  const paramsTitle = '!tier_change メンション tierの数字';
+  const example = '!tier_change @xxx 2';
   const exampleMessage = `${paramsTitle}\n例\n${example}`;
 
   const mentionMembers = message.mentions.members;
@@ -65,7 +65,7 @@ exports.update = async (client, message) => {
     return;
   }
 
-  if (mentionMembers.length > 1) {
+  if (mentionMembers.array().length > 1) {
     message.reply(`更新できるユーザーは１回につき１人までです\n${exampleMessage}`);
     return;
   }
@@ -81,7 +81,7 @@ exports.update = async (client, message) => {
     return;
   }
 
-  const member = await message.guild.fetchMember(mentionMembers[0].id);
+  const member = await message.guild.fetchMember(mentionMembers.first().id);
   const userInfo = await db.users.findOne({ where: { discord_id: member.id } });
   const userName = member.displayName;
   if (!userInfo) {
@@ -100,7 +100,7 @@ exports.update = async (client, message) => {
   db.users
     .update(updUser, {
       where: {
-        discord_id: updUser.tier
+        discord_id: member.id
       }
     })
     .then(async () => {

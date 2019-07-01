@@ -23,6 +23,9 @@ exports.base = (client, message) => {
     case 'delete':
       user.delete(client, message);
       break;
+    case 'tier_change':
+      user.update(client, message, args);
+      break;
 
     // Tier
     case 'tier_add':
